@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { propertyService } from '@/lib/api';
-import { PropertyCardData, PropertyFilters, PropertyType } from '@/types/property';
+import { PropertyCardData, PropertyFilters } from '@/types/property';
 
 interface UsePropertiesReturn {
   properties: PropertyCardData[];
@@ -50,9 +50,10 @@ export function useProperties(initialFilters?: PropertyFilters): UsePropertiesRe
       );
       
       if (response.success && response.data) {
-        // Verificar se response.data tem a estrutura esperada
-        const propertiesData = response.data.data || response.data.properties || [];
-        const paginationData = response.data.pagination || { page: 1, limit: 12, total: 0, totalPages: 0 };
+        // Estrutura: ApiResponse<{ data: Property[]; pagination: {...} }>
+        const paginated = response.data;
+        const propertiesData = paginated.data || [];
+        const paginationData = paginated.pagination || { page: 1, limit: 12, total: 0, totalPages: 0 };
         
         const propertyCards = propertiesData.map((property: any) => ({
           id: property.id,

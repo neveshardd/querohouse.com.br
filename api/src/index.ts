@@ -163,10 +163,9 @@ async function start() {
     const server = await buildServer();
     
     const port = parseInt(process.env.PORT || '3001');
+    const host = process.env.HOST || '0.0.0.0';
 
-    await server.listen({ port, 
-      host: process.env.NODE_ENV === 'development' ? '0.0.0.0' : 'localhost'
-     });
+    await server.listen({ port, host });
     
   } catch (error) {
     logger.error(error, 'Inicialização do servidor');

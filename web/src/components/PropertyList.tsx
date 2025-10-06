@@ -3,7 +3,8 @@
 import { useProperties } from '@/hooks/useProperties';
 import PropertyCard from './PropertyCard';
 import { PropertyFilters } from '@/types/property';
-import { motion } from 'framer-motion';
+import gsap from 'gsap';
+import { useEffect, useRef } from 'react';
 
 interface PropertyListProps {
   filters?: PropertyFilters;
@@ -47,15 +48,12 @@ export default function PropertyList({ filters, sortBy, viewMode }: PropertyList
         <div className="text-red-600 text-6xl mb-4">⚠️</div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Erro ao carregar propriedades</h2>
         <p className="text-gray-600 mb-4">{error}</p>
-        <motion.button 
+        <button 
           onClick={() => window.location.reload()}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          transition={{ duration: 0.1 }}
         >
           Tentar novamente
-        </motion.button>
+        </button>
       </div>
     );
   }
@@ -81,32 +79,29 @@ export default function PropertyList({ filters, sortBy, viewMode }: PropertyList
           {pagination.total} propriedades encontradas
         </p>
       </div>
-      
-      <motion.div 
+      <div 
         className={`grid gap-6 ${
           viewMode === 'list' 
             ? 'grid-cols-1' 
             : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
         }`}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
       >
         {sortedProperties.map((property, index) => (
-          <motion.div
-            key={property.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ 
-              duration: 0.3, 
-              delay: index * 0.1,
-              ease: "easeOut"
-            }}
-          >
+          <GridItem key={property.id} index={index}>
             <PropertyCard property={property} />
-          </motion.div>
+          </GridItem>
         ))}
-      </motion.div>
+      </div>
     </div>
   );
+}
+
+function GridItem({ children, index }: { children: React.ReactNode; index: number }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    gsap.fromTo(el, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.3, delay: index * 0.1, ease: 'power1.out' });
+  }, [index]);
+  return <div ref={ref}>{children}</div>;
 }

@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { XMarkIcon, EyeIcon, EyeSlashIcon, MagnifyingGlassIcon, BriefcaseIcon, TruckIcon, BuildingOfficeIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
-import { Transition } from '@headlessui/react';
-import { motion, AnimatePresence } from 'framer-motion';
+// Transition removido (não utilizado)
+import gsap from 'gsap';
+import { useRef } from 'react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -13,6 +14,8 @@ interface AuthModalProps {
 }
 
 export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
+  const backdropRef = useRef<HTMLDivElement | null>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -194,29 +197,36 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
     console.log('Login com Google');
   };
 
+  useEffect(() => {
+    const backdrop = backdropRef.current;
+    const content = contentRef.current;
+    if (!backdrop || !content) return;
+
+    if (isOpen) {
+      gsap.fromTo(backdrop, { opacity: 0 }, { opacity: 1, duration: 0.2 });
+      gsap.fromTo(content, { scale: 0.95, opacity: 0, y: 20 }, { scale: 1, opacity: 1, y: 0, duration: 0.3, ease: 'power1.out' });
+    } else {
+      gsap.to(content, { scale: 0.95, opacity: 0, y: 20, duration: 0.2, ease: 'power1.out' });
+      gsap.to(backdrop, { opacity: 0, duration: 0.2 });
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
-    <AnimatePresence>
-      <motion.div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            onClose();
-          }
-        }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
+    <div
+      ref={backdropRef}
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div
+        ref={contentRef}
+        className="bg-white rounded-2xl w-full max-w-4xl max-h-7/8 overflow-y-auto shadow-2xl"
       >
-        <motion.div
-          className="bg-white rounded-2xl w-full max-w-4xl max-h-7/8 overflow-y-auto shadow-2xl"
-          initial={{ scale: 0.95, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.95, opacity: 0, y: 20 }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
-        >
           {/* Header */}
           <div className="flex justify-between items-center p-6 border-b border-slate-200">
             <h2 className="text-2xl font-bold text-slate-900">Menu</h2>
@@ -235,18 +245,15 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
                 {/* Entrar ou criar conta */}
                 <div>
                   <h3 className="text-lg font-semibold text-slate-900 mb-4">Entrar ou criar conta</h3>
-                  <motion.button
+                  <button
                     onClick={handleGoogleLogin}
                     className="w-full flex items-center justify-center px-4 py-3 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    transition={{ duration: 0.1 }}
                   >
                     <div className="w-5 h-5 bg-blue-500 rounded flex items-center justify-center mr-3">
                       <span className="text-white text-xs font-bold">G</span>
                     </div>
                     <span className="text-slate-700 font-medium">Entrar com Google</span>
-                  </motion.button>
+                  </button>
                 </div>
 
                 {/* Dados de acesso */}
@@ -364,16 +371,13 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
                     </div>
 
 
-                    <motion.button
+                    <button
                       type="submit"
                       disabled={isLoggingIn || isRegistering}
                       className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      transition={{ duration: 0.1 }}
                     >
                       {isLoggingIn ? 'Entrando...' : isRegistering ? 'Cadastrando...' : (isLogin ? 'Entrar' : 'Cadastrar')}
-                    </motion.button>
+                    </button>
                   </form>
 
                   <div className="text-center mt-4">
@@ -448,8 +452,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
               </div>
             </div>
           </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+        </div>
+      </div>
   );
 }

@@ -5,20 +5,20 @@ export const subtleAnimations = {
   // Animações de hover sutis
   hover: {
     scale: 1.02,
-    transition: { duration: 0.1, ease: "easeOut" }
+    transition: { duration: 0.1, ease: [0.16, 1, 0.3, 1] as const }
   },
   
   // Animações de tap sutis
   tap: {
     scale: 0.98,
-    transition: { duration: 0.1, ease: "easeOut" }
+    transition: { duration: 0.1, ease: [0.16, 1, 0.3, 1] as const }
   },
   
   // Animações de entrada sutis
   fadeIn: {
     initial: { opacity: 0, y: 10 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.3, ease: "easeOut" }
+    transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }
   },
   
   // Animações de entrada com delay
@@ -28,7 +28,7 @@ export const subtleAnimations = {
     transition: { 
       duration: 0.3, 
       delay: index * 0.1,
-      ease: "easeOut"
+      ease: [0.16, 1, 0.3, 1] as const
     }
   }),
   
@@ -44,7 +44,7 @@ export const subtleAnimations = {
       initial: { scale: 0.95, opacity: 0, y: 20 },
       animate: { scale: 1, opacity: 1, y: 0 },
       exit: { scale: 0.95, opacity: 0, y: 20 },
-      transition: { duration: 0.3, ease: "easeOut" }
+      transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }
     }
   },
   
@@ -59,7 +59,7 @@ export const subtleAnimations = {
   card: {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.3, ease: "easeOut" },
+    transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] as const },
     hover: { y: -2 },
     tap: { scale: 0.98 }
   }
@@ -84,7 +84,7 @@ export const animationVariants = {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.3, ease: "easeOut" }
+      transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }
     }
   },
   
@@ -98,7 +98,7 @@ export const animationVariants = {
 
 // Configurações de transição padrão
 export const defaultTransitions = {
-  fast: { duration: 0.1, ease: "easeOut" },
-  normal: { duration: 0.3, ease: "easeOut" },
-  slow: { duration: 0.5, ease: "easeOut" }
+  fast: { duration: 0.1, ease: [0.16, 1, 0.3, 1] as const },
+  normal: { duration: 0.3, ease: [0.16, 1, 0.3, 1] as const },
+  slow: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const }
 };

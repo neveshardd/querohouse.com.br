@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { authService, LoginRequest, RegisterRequest, UpdateProfileRequest, ForgotPasswordRequest, ResetPasswordRequest, parseApiErrorMessage } from '@/lib/api';
+import { authService, LoginRequest, RegisterRequest, UpdateProfileRequest, ForgotPasswordRequest, ResetPasswordRequest, parseApiErrorMessage, User } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
@@ -34,6 +34,7 @@ export function useAuth() {
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutos
     enabled: hasToken, // Só executa se houver token
+    select: (res) => (res?.success && res.data ? (res.data as User) : null) as User | null,
   });
 
   // Mutation para login
@@ -207,7 +208,7 @@ export function useAuth() {
 
   return {
     // Estado
-    user,
+    user: user ?? null,
     isAuthenticated,
     isLoading,
     

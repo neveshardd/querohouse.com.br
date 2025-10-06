@@ -4,22 +4,48 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { HomeIcon, MapPinIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline';
 import { PropertyCardData, formatPrice } from '@/types/property';
-import { motion } from 'framer-motion';
+import gsap from 'gsap';
+import { useEffect, useRef } from 'react';
 
 interface PropertyCardProps {
   property: PropertyCardData;
 }
 
 export default function PropertyCard({ property }: PropertyCardProps) {
+  const cardRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    gsap.fromTo(el, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.3, ease: 'power1.out' });
+
+    const onEnter = () => gsap.to(el, { y: -2, duration: 0.12, ease: 'power1.out' });
+    const onLeave = () => gsap.to(el, { y: 0, duration: 0.12, ease: 'power1.out' });
+    const onDown = () => gsap.to(el, { scale: 0.98, duration: 0.08, ease: 'power1.out' });
+    const onUp = () => gsap.to(el, { scale: 1, duration: 0.12, ease: 'power1.out' });
+
+    el.addEventListener('mouseenter', onEnter);
+    el.addEventListener('mouseleave', onLeave);
+    el.addEventListener('mousedown', onDown);
+    el.addEventListener('mouseup', onUp);
+    el.addEventListener('touchstart', onDown, { passive: true });
+    el.addEventListener('touchend', onUp, { passive: true });
+
+    return () => {
+      el.removeEventListener('mouseenter', onEnter);
+      el.removeEventListener('mouseleave', onLeave);
+      el.removeEventListener('mousedown', onDown);
+      el.removeEventListener('mouseup', onUp);
+      el.removeEventListener('touchstart', onDown);
+      el.removeEventListener('touchend', onUp);
+    };
+  }, []);
+
   return (
     <Link href={`/imoveis/${property.id}`} className="group">
-      <motion.div 
+      <div 
+        ref={cardRef}
         className="card hover-lift overflow-hidden"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
-        whileHover={{ y: -2 }}
-        whileTap={{ scale: 0.98 }}
       >
         <div className="relative">
           <div className="w-full h-56 bg-slate-100 relative overflow-hidden">
@@ -85,7 +111,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
     </Link>
   );
 }

@@ -178,7 +178,7 @@ export function Select({ value, onValueChange, children }: SelectProps) {
     <div className="relative">
       {React.Children.map(children, (child) => {
         if (React.isValidElement(child)) {
-          return React.cloneElement(child, { value, onValueChange });
+          return React.cloneElement(child as React.ReactElement, { value, onValueChange } as any);
         }
         return child;
       })}
@@ -246,7 +246,7 @@ export function RadioGroup({ value, onValueChange, children }: RadioGroupProps) 
     <div className="space-y-2">
       {React.Children.map(children, (child) => {
         if (React.isValidElement(child)) {
-          return React.cloneElement(child, { value, onValueChange });
+          return React.cloneElement(child as React.ReactElement, { value, onValueChange } as any);
         }
         return child;
       })}

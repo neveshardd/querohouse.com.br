@@ -6,11 +6,51 @@ import { useAuthContext } from '@/providers/AuthProvider';
 import { Menu, Transition } from '@headlessui/react';
 import { Bars3Icon, UserIcon } from '@heroicons/react/24/outline';
 import AuthModal from './AuthModal';
-import { motion } from 'framer-motion';
+import gsap from 'gsap';
+import { useEffect, useRef } from 'react';
 
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuthContext();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const navRefs = useRef<HTMLDivElement[]>([]);
+  const loginBtnRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    navRefs.current.forEach((el) => {
+      if (!el) return;
+      const onEnter = () => gsap.to(el, { scale: 1.05, duration: 0.12, ease: 'power1.out' });
+      const onLeave = () => gsap.to(el, { scale: 1, duration: 0.12, ease: 'power1.out' });
+      const onDown = () => gsap.to(el, { scale: 0.95, duration: 0.08, ease: 'power1.out' });
+      const onUp = () => gsap.to(el, { scale: 1.05, duration: 0.12, ease: 'power1.out' });
+      el.addEventListener('mouseenter', onEnter);
+      el.addEventListener('mouseleave', onLeave);
+      el.addEventListener('mousedown', onDown);
+      el.addEventListener('mouseup', onUp);
+      return () => {
+        el.removeEventListener('mouseenter', onEnter);
+        el.removeEventListener('mouseleave', onLeave);
+        el.removeEventListener('mousedown', onDown);
+        el.removeEventListener('mouseup', onUp);
+      };
+    });
+    const loginEl = loginBtnRef.current;
+    if (loginEl) {
+      const onEnter = () => gsap.to(loginEl, { scale: 1.05, duration: 0.12, ease: 'power1.out' });
+      const onLeave = () => gsap.to(loginEl, { scale: 1, duration: 0.12, ease: 'power1.out' });
+      const onDown = () => gsap.to(loginEl, { scale: 0.95, duration: 0.08, ease: 'power1.out' });
+      const onUp = () => gsap.to(loginEl, { scale: 1.05, duration: 0.12, ease: 'power1.out' });
+      loginEl.addEventListener('mouseenter', onEnter);
+      loginEl.addEventListener('mouseleave', onLeave);
+      loginEl.addEventListener('mousedown', onDown);
+      loginEl.addEventListener('mouseup', onUp);
+      return () => {
+        loginEl.removeEventListener('mouseenter', onEnter);
+        loginEl.removeEventListener('mouseleave', onLeave);
+        loginEl.removeEventListener('mousedown', onDown);
+        loginEl.removeEventListener('mouseup', onUp);
+      };
+    }
+  }, []);
 
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
@@ -28,46 +68,46 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-1">
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <div ref={(el) => { if (el) navRefs.current[0] = el; }}>
               <Link 
                 href="/" 
                 className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-smooth"
               >
                 Início
               </Link>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            </div>
+            <div ref={(el) => { if (el) navRefs.current[1] = el; }}>
               <Link 
                 href="/imoveis" 
                 className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-smooth"
               >
                 Imóveis
               </Link>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            </div>
+            <div ref={(el) => { if (el) navRefs.current[2] = el; }}>
               <Link 
                 href="/anunciar" 
                 className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-smooth"
               >
                 Anunciar
               </Link>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            </div>
+            <div ref={(el) => { if (el) navRefs.current[3] = el; }}>
               <Link 
                 href="/sobre" 
                 className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-smooth"
               >
                 Sobre
               </Link>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            </div>
+            <div ref={(el) => { if (el) navRefs.current[4] = el; }}>
               <Link 
                 href="/contato" 
                 className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-smooth"
               >
                 Contato
               </Link>
-            </motion.div>
+            </div>
           </nav>
 
           {/* Desktop Actions */}
@@ -129,14 +169,13 @@ export default function Header() {
                 </Transition>
               </Menu>
             ) : (
-              <motion.button
+              <button
+                ref={loginBtnRef}
                 onClick={() => setIsAuthModalOpen(true)}
                 className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-smooth"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
                 <Bars3Icon className="h-6 w-6" />
-              </motion.button>
+              </button>
             )}
           </div>
 

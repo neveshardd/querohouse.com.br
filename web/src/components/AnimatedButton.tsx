@@ -1,7 +1,7 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { useAnimations } from '@/hooks/useAnimations';
+import gsap from 'gsap';
+import { useEffect, useRef } from 'react';
 
 interface AnimatedButtonProps {
   children: React.ReactNode;
@@ -20,7 +20,33 @@ export default function AnimatedButton({
   disabled = false,
   className = ''
 }: AnimatedButtonProps) {
-  const { button, createHover } = useAnimations();
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  
+  useEffect(() => {
+    const el = buttonRef.current;
+    if (!el || disabled) return;
+
+    const onEnter = () => gsap.to(el, { scale: 1.02, duration: 0.12, ease: 'power1.out' });
+    const onLeave = () => gsap.to(el, { scale: 1, duration: 0.12, ease: 'power1.out' });
+    const onDown = () => gsap.to(el, { scale: 0.98, duration: 0.08, ease: 'power1.out' });
+    const onUp = () => gsap.to(el, { scale: 1.02, duration: 0.12, ease: 'power1.out' });
+
+    el.addEventListener('mouseenter', onEnter);
+    el.addEventListener('mouseleave', onLeave);
+    el.addEventListener('mousedown', onDown);
+    el.addEventListener('mouseup', onUp);
+    el.addEventListener('touchstart', onDown, { passive: true });
+    el.addEventListener('touchend', onUp, { passive: true });
+
+    return () => {
+      el.removeEventListener('mouseenter', onEnter);
+      el.removeEventListener('mouseleave', onLeave);
+      el.removeEventListener('mousedown', onDown);
+      el.removeEventListener('mouseup', onUp);
+      el.removeEventListener('touchstart', onDown);
+      el.removeEventListener('touchend', onUp);
+    };
+  }, [disabled]);
   
   const baseClasses = 'font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2';
   
@@ -39,13 +65,13 @@ export default function AnimatedButton({
   const classes = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`;
   
   return (
-    <motion.button
+    <button
+      ref={buttonRef}
       onClick={onClick}
       disabled={disabled}
       className={`${classes} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-      {...createHover()}
     >
       {children}
-    </motion.button>
+    </button>
   );
 }

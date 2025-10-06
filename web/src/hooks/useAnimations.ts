@@ -38,7 +38,7 @@ export function useAnimations() {
       transition: { 
         duration: 0.3, 
         delay,
-        ease: "easeOut"
+        ease: [0.16, 1, 0.3, 1] as const
       }
     }),
     

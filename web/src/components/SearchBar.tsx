@@ -3,7 +3,8 @@
 import { useState, useCallback, useMemo } from 'react';
 import { Search, Home, DollarSign, Building2, ChevronDown, Check, X, Bath, Map } from 'lucide-react';
 import { Listbox, Transition } from '@headlessui/react';
-import { motion } from 'framer-motion';
+import gsap from 'gsap';
+import { useEffect, useRef } from 'react';
 
 // Types
 interface SearchFilters {
@@ -301,20 +302,43 @@ const PropertyTypeSelect = ({
   );
 };
 
-const SearchButton = () => (
-  <div className="flex items-end">
-    <motion.button
-      type="submit"
-      className="btn-primary w-full flex items-center justify-center"
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ duration: 0.1 }}
-    >
-      <Search className="w-4 h-4 mr-2" />
-      Buscar
-    </motion.button>
-  </div>
-);
+const SearchButton = () => {
+  const ref = useRef<HTMLButtonElement | null>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const onEnter = () => gsap.to(el, { scale: 1.02, duration: 0.12, ease: 'power1.out' });
+    const onLeave = () => gsap.to(el, { scale: 1, duration: 0.12, ease: 'power1.out' });
+    const onDown = () => gsap.to(el, { scale: 0.98, duration: 0.08, ease: 'power1.out' });
+    const onUp = () => gsap.to(el, { scale: 1.02, duration: 0.12, ease: 'power1.out' });
+    el.addEventListener('mouseenter', onEnter);
+    el.addEventListener('mouseleave', onLeave);
+    el.addEventListener('mousedown', onDown);
+    el.addEventListener('mouseup', onUp);
+    el.addEventListener('touchstart', onDown, { passive: true });
+    el.addEventListener('touchend', onUp, { passive: true });
+    return () => {
+      el.removeEventListener('mouseenter', onEnter);
+      el.removeEventListener('mouseleave', onLeave);
+      el.removeEventListener('mousedown', onDown);
+      el.removeEventListener('mouseup', onUp);
+      el.removeEventListener('touchstart', onDown);
+      el.removeEventListener('touchend', onUp);
+    };
+  }, []);
+  return (
+    <div className="flex items-end">
+      <button
+        ref={ref}
+        type="submit"
+        className="btn-primary w-full flex items-center justify-center"
+      >
+        <Search className="w-4 h-4 mr-2" />
+        Buscar
+      </button>
+    </div>
+  );
+};
 
 const AdvancedFilters = ({ 
   filters, 
@@ -336,30 +360,24 @@ const AdvancedFilters = ({
   return (
     <div className="border-t border-slate-200 pt-6">
       <div className="flex items-center justify-between mb-4">
-        <motion.button
+        <button
           type="button"
           onClick={onToggleFilters}
           className="btn-ghost flex items-center"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          transition={{ duration: 0.1 }}
         >
           <ChevronDown className={`w-4 h-4 mr-2 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
           {showFilters ? 'Ocultar filtros avançados' : 'Mostrar filtros avançados'}
-        </motion.button>
+        </button>
         
         {hasActiveFilters && (
-          <motion.button
+          <button
             type="button"
             onClick={onClearFilters}
             className="btn-ghost text-sm text-slate-500 hover:text-slate-700 flex items-center"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ duration: 0.1 }}
           >
             <X className="w-4 h-4 mr-1" />
             Limpar filtros
-          </motion.button>
+          </button>
         )}
       </div>
 
