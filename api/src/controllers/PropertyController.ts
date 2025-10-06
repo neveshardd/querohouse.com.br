@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { PropertyService, CreatePropertyRequest, UpdatePropertyRequest, PropertyFilters } from '@/services/PropertyService';
+import { PropertyService, CreatePropertyRequest, UpdatePropertyRequest, PropertyFilters } from '../services/PropertyService';
 import { z } from 'zod';
 
 // Schemas de validação
