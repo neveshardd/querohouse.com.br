@@ -42,6 +42,9 @@ api.interceptors.response.use(
       // Manter a estrutura de erro da API para que o frontend possa acessar
       error.apiResponse = error.response.data;
     }
+    // Expor status e mensagem padronizada
+    error.apiStatus = error.response?.status;
+    error.apiMessage = error.response?.data?.error || error.response?.data?.message || error.message;
     
     if (error.response?.status === 401) {
       // Token expirado ou inválido - só limpar se não for uma requisição de autenticação
@@ -140,6 +143,24 @@ export interface ApiResponse<T = any> {
   error?: string;
 }
 
+// Utilitário para padronizar mensagens de erro para UI
+export function parseApiErrorMessage(err: any): string {
+  const status: number | undefined = err?.apiStatus || err?.response?.status;
+  const raw: string = err?.apiResponse?.error || err?.response?.data?.error || err?.response?.data?.message || err?.message || 'Erro inesperado';
+  const msg = (raw || '').toString().toLowerCase();
+
+  if (status === 401) return 'Sua sessão expirou ou é inválida. Faça login novamente.';
+  if (status === 429) return 'Muitas tentativas. Aguarde alguns instantes e tente novamente.';
+  if (msg.includes('credenciais') || msg.includes('unauthorized')) return 'Email ou senha incorretos.';
+  if (msg.includes('email já está em uso') || (msg.includes('email') && msg.includes('uso'))) return 'Este email já está em uso.';
+  if (msg.includes('senha') && (msg.includes('6') || msg.includes('curta') || msg.includes('fraca'))) return 'A senha deve ter pelo menos 6 caracteres.';
+  if (msg.includes('dados inválidos') || msg.includes('validation') || msg.includes('invalid')) return 'Dados inválidos. Verifique os campos e tente novamente.';
+  if (msg.includes('usuário não autenticado')) return 'Você precisa estar logado para continuar.';
+  if (msg.includes('network') || msg.includes('conexão') || status === 0) return 'Não foi possível conectar ao servidor. Tente novamente mais tarde.';
+
+  return raw || 'Ocorreu um erro. Tente novamente.';
+}
+
 // Serviços da API usando Better Auth
 export const authService = {
   async login(credentials: LoginRequest): Promise<ApiResponse<AuthResponse>> {
@@ -151,16 +172,11 @@ export const authService = {
       
       console.log('Resposta do login:', response.data);
       
-      // Adaptar resposta do Better Auth para o formato esperado
-      if (response.data && response.data.user) {
-        return {
-          success: true,
-          data: {
-            user: response.data.user,
-            token: response.data.session?.id || response.data.session?.token || '',
-            refreshToken: response.data.session?.id || response.data.session?.token || '',
-          }
-        };
+      // Backend responde { success, data: { user, token, refreshToken } }
+      const apiData = response.data;
+      if (apiData?.success && apiData?.data?.user) {
+        const { user, token, refreshToken } = apiData.data;
+        return { success: true, data: { user, token, refreshToken } };
       }
       
       return {
@@ -186,16 +202,11 @@ export const authService = {
       
       console.log('Resposta do registro:', response.data);
       
-      // Adaptar resposta do Better Auth para o formato esperado
-      if (response.data && response.data.user) {
-        return {
-          success: true,
-          data: {
-            user: response.data.user,
-            token: response.data.session?.id || response.data.session?.token || '',
-            refreshToken: response.data.session?.id || response.data.session?.token || '',
-          }
-        };
+      // Backend responde { success, data: { user, token, refreshToken } }
+      const apiData = response.data;
+      if (apiData?.success && apiData?.data?.user) {
+        const { user, token, refreshToken } = apiData.data;
+        return { success: true, data: { user, token, refreshToken } };
       }
       
       return {
@@ -233,11 +244,9 @@ export const authService = {
       
       console.log('Resposta da sessão:', response.data);
       
-      if (response.data && response.data.user) {
-        return {
-          success: true,
-          data: response.data.user
-        };
+      // Backend responde { success, data: user }
+      if (response.data?.success && response.data?.data) {
+        return { success: true, data: response.data.data };
       }
       
       return {
@@ -259,11 +268,9 @@ export const authService = {
       
       console.log('Resposta da atualização:', response.data);
       
-      if (response.data && response.data.user) {
-        return {
-          success: true,
-          data: response.data.user
-        };
+      // Backend responde { success, data: user }
+      if (response.data?.success && response.data?.data) {
+        return { success: true, data: response.data.data };
       }
       
       return {

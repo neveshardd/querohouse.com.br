@@ -2,7 +2,7 @@
 
 import { useAuthContext } from '@/providers/AuthProvider';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
@@ -18,12 +18,22 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAuthContext();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  // Evitar hydration mismatch: só renderizar fallback/redirect após montar no cliente
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (mounted && !isLoading && !isAuthenticated) {
       router.push('/login');
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [mounted, isAuthenticated, isLoading, router]);
+
+  if (!mounted) {
+    return null;
+  }
 
   if (isLoading) {
     return (

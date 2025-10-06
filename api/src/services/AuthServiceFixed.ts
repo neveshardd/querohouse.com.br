@@ -41,7 +41,16 @@ export class AuthServiceFixed {
         account => account.type === 'credentials' && account.provider === 'credentials'
       );
 
-      if (!credentialsAccount) {
+      if (!credentialsAccount || !credentialsAccount.passwordHash) {
+        return {
+          success: false,
+          error: 'Credenciais inválidas',
+        };
+      }
+
+      // Validar senha
+      const isValidPassword = await bcrypt.compare(credentials.password, credentialsAccount.passwordHash);
+      if (!isValidPassword) {
         return {
           success: false,
           error: 'Credenciais inválidas',
@@ -99,6 +108,10 @@ export class AuthServiceFixed {
         };
       }
 
+      // Hash da senha
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(userData.password, salt);
+
       // Criar usuário
       const user = await prisma.user.create({
         data: {
@@ -117,6 +130,7 @@ export class AuthServiceFixed {
           type: 'credentials',
           provider: 'credentials',
           providerAccountId: user.email,
+          passwordHash,
         }
       });
 

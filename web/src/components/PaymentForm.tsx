@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
 import { Label, Card } from '@/components/ui/basic';
+import api from '@/lib/api';
 
 interface PaymentFormProps {
   plan: any;
@@ -33,19 +34,13 @@ export default function PaymentForm({ plan, onPaymentSuccess, onCancel }: Paymen
     setIsProcessing(true);
 
     try {
-      // Criar PaymentIntent
-      const response = await fetch('/api/payments/create-payment-intent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: plan.price,
-          planId: plan.id || 'plan-' + plan.name.toLowerCase().replace(/\s+/g, '-'),
-        }),
+      // Criar PaymentIntent via API backend, usando Axios com token automático
+      const { data } = await api.post('/api/payments/create-payment-intent', {
+        amount: plan.price,
+        planId: plan.id || 'plan-' + plan.name.toLowerCase().replace(/\s+/g, '-'),
       });
 
-      const { clientSecret } = await response.json();
+      const clientSecret = data?.clientSecret;
 
       if (!clientSecret) {
         throw new Error('Falha ao criar PaymentIntent');

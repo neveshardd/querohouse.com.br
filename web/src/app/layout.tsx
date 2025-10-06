@@ -7,6 +7,7 @@ import { QueryProvider } from "@/providers/QueryProvider";
 import { AuthProvider } from "@/providers/AuthProvider";
 import StripeProvider from "@/providers/StripeProvider";
 import { Toaster } from "sonner";
+import ScrollToTop from "@/components/ScrollToTop";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -32,6 +33,7 @@ export default function RootLayout({
             <StripeProvider>
               <Header />
               <main className="min-h-screen">
+                <ScrollToTop />
                 {children}
               </main>
               <Footer />

@@ -125,35 +125,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="section-padding bg-slate-50">
-        <div className="container-elegant">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-              Por que escolher o QueroHouse?
-            </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Oferecemos as melhores ferramentas para sua jornada imobiliária
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            {features.map((feature, index) => (
-              <div key={index} className="text-center group">
-                <div className="w-16 h-16 bg-white border border-slate-200 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:border-slate-300 transition-smooth">
-                  <feature.icon className="w-8 h-8 text-slate-600" />
-                </div>
-                <h3 className="text-xl font-semibold text-slate-900 mb-4">
-                  {feature.title}
-                </h3>
-                <p className="text-slate-600 leading-relaxed">
-                  {feature.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      
+
+      
 
       {/* Stats Section */}
       <section className="section-padding">
@@ -187,19 +161,53 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link 
               href="/imoveis" 
-              className="btn-secondary bg-white text-slate-900 hover:bg-slate-50"
+              className="btn-secondary flex items-center justify-center bg-white text-slate-900 hover:bg-slate-50"
             >
               Começar Busca
             </Link>
             <Link 
               href="/anunciar" 
-              className="btn-ghost border border-slate-600 text-white hover:bg-slate-800"
+              className="btn-ghost border flex items-center justify-center border-slate-600 text-white hover:bg-slate-800"
             >
               Anunciar Imóvel
             </Link>
           </div>
         </div>
       </section>
+
+      {/* Features Section */}
+      <section className="section-padding bg-slate-50">
+        <div className="container-elegant">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+              Por que escolher o QueroHouse?
+            </h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+              Oferecemos as melhores ferramentas para sua jornada imobiliária
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            {features.map((feature, index) => (
+              <div key={index} className="text-center group">
+                <div className="w-16 h-16 bg-white border border-slate-200 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:border-slate-300 transition-smooth">
+                  <feature.icon className="w-8 h-8 text-slate-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-slate-900 mb-4">
+                  {feature.title}
+                </h3>
+                <p className="text-slate-600 leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      
+
+      
     </div>
   );
 }

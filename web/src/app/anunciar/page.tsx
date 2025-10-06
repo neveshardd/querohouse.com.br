@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Home, Users, Building2, Check } from 'lucide-react';
 import ProprietarioForm from '@/components/ProprietarioForm';
 import CorretorForm from '@/components/CorretorForm';
 import IncorporadoraForm from '@/components/IncorporadoraForm';
 import PaymentForm from '@/components/PaymentForm';
 import AuthModal from '@/components/AuthModal';
+import { useAuthContext } from '@/providers/AuthProvider';
 
 interface Plan {
   id: string;
@@ -86,50 +87,96 @@ export default function VenderPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [userType, setUserType] = useState('');
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const { isAuthenticated } = useAuthContext();
+  const [paymentCompleted, setPaymentCompleted] = useState(false);
+  const stepRef = useRef<HTMLDivElement | null>(null);
 
   const handlePlanSelect = (plan: Plan) => {
     setUserType(plan.id);
     setSelectedPlan(plan);
-    setCurrentStep(2);
+    // Se já estiver autenticado, vai direto ao pagamento
+    if (isAuthenticated) {
+      setCurrentStep(4);
+    } else {
+      setCurrentStep(2);
+    }
+    // Scroll topo a cada mudança de step
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBack = () => {
+    // Não permitir acessar o formulário (step 3) sem pagamento
+    if (currentStep === 4) {
+      // Do checkout, voltar para seleção de plano
+      setCurrentStep(1);
+      return;
+    }
+
+    if (currentStep === 3) {
+      // Se estiver no formulário após pagamento, voltar para início
+      setCurrentStep(1);
+      return;
+    }
+
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
   };
 
   const handleAuthentication = () => {
-    // Verificar se usuário está autenticado
-    const token = localStorage.getItem('auth_token');
-    if (!token) {
-      // Abrir modal de autenticação
+    if (!isAuthenticated) {
       setShowAuthModal(true);
     } else {
-      setIsAuthenticated(true);
       setCurrentStep(4);
     }
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleAuthSuccess = () => {
     setShowAuthModal(false);
-    setIsAuthenticated(true);
     setCurrentStep(4);
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handlePaymentSuccess = () => {
+    setPaymentCompleted(true);
     setCurrentStep(3);
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handlePaymentCancel = () => {
     setCurrentStep(1);
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // Se o usuário autenticar (ou já estiver autenticado) e estiver no passo 2, avançar automaticamente
+  useEffect(() => {
+    if (isAuthenticated && currentStep === 2) {
+      setCurrentStep(4);
+    }
+  }, [isAuthenticated, currentStep]);
+
+  // Animação sutil entre steps usando GSAP com import dinâmico (client-only)
+  useEffect(() => {
+    let ctx: any;
+    (async () => {
+      if (!stepRef.current) return;
+      const gsap = (await import('gsap')).default;
+      ctx = gsap.context(() => {
+        gsap.fromTo(
+          stepRef.current,
+          { opacity: 0, y: 12 },
+          { opacity: 1, y: 0, duration: 0.35, ease: 'power1.out' }
+        );
+      }, stepRef);
+    })();
+    return () => ctx && ctx.revert && ctx.revert();
+  }, [currentStep]);
 
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" ref={stepRef}>
       {/* Botão de Voltar */}
       {currentStep > 1 && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
@@ -291,7 +338,7 @@ export default function VenderPage() {
       )}
 
       {/* Step 3: Formulário Específico */}
-      {currentStep === 3 && (
+      {currentStep === 3 && paymentCompleted && (
         <>
           {userType === 'proprietario' && <ProprietarioForm />}
           {userType === 'corretor' && <CorretorForm />}

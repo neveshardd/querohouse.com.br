@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { authService, LoginRequest, RegisterRequest, UpdateProfileRequest, ForgotPasswordRequest, ResetPasswordRequest } from '@/lib/api';
+import { authService, LoginRequest, RegisterRequest, UpdateProfileRequest, ForgotPasswordRequest, ResetPasswordRequest, parseApiErrorMessage } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
@@ -66,14 +66,7 @@ export function useAuth() {
       queryClient.removeQueries({ queryKey: ['auth', 'profile'] });
       
       // Extrair mensagem de erro específica da API
-      let errorMessage = 'Erro de conexão. Tente novamente.';
-      if (error?.apiResponse?.error) {
-        errorMessage = error.apiResponse.error;
-      } else if (error?.response?.data?.error) {
-        errorMessage = error.response.data.error;
-      } else if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      }
+  const errorMessage = parseApiErrorMessage(error);
       
       // Sempre mostrar toast, mesmo para erros silenciosos
       toast.error(errorMessage);
@@ -110,14 +103,7 @@ export function useAuth() {
       queryClient.removeQueries({ queryKey: ['auth', 'profile'] });
       
       // Extrair mensagem de erro específica da API
-      let errorMessage = 'Erro de conexão. Tente novamente.';
-      if (error?.apiResponse?.error) {
-        errorMessage = error.apiResponse.error;
-      } else if (error?.response?.data?.error) {
-        errorMessage = error.response.data.error;
-      } else if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      }
+  const errorMessage = parseApiErrorMessage(error);
       
       // Sempre mostrar toast, mesmo para erros silenciosos
       toast.error(errorMessage);
@@ -155,7 +141,7 @@ export function useAuth() {
       }
     },
     onError: (error) => {
-      toast.error('Erro de conexão. Tente novamente.');
+      toast.error(parseApiErrorMessage(error));
     },
   });
 
@@ -170,7 +156,7 @@ export function useAuth() {
       }
     },
     onError: (error) => {
-      toast.error('Erro de conexão. Tente novamente.');
+      toast.error(parseApiErrorMessage(error));
     },
   });
 
