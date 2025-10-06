@@ -91,7 +91,7 @@ export default function PropertyDetailsPage({ params }: { params: { id: string }
             items={[
               { label: 'Imóveis', href: '/imoveis' },
               { label: 'Detalhes', href: undefined },
-              { label: property.title }
+              { label: propertyData.title }
             ]} 
             maxItems={2}
           />
