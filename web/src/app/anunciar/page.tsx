@@ -91,6 +91,7 @@ export default function VenderPage() {
   const { isAuthenticated } = useAuthContext();
   const [paymentCompleted, setPaymentCompleted] = useState(false);
   const stepRef = useRef<HTMLDivElement | null>(null);
+  const [persistedPlanChecked, setPersistedPlanChecked] = useState(false);
 
   const handlePlanSelect = (plan: Plan) => {
     setUserType(plan.id);
@@ -103,6 +104,10 @@ export default function VenderPage() {
     }
     // Scroll topo a cada mudança de step
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Persistir plano escolhido
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('selected_plan', JSON.stringify({ id: plan.id, name: plan.name, price: plan.price }));
+    }
   };
 
   const handleBack = () => {
@@ -143,6 +148,11 @@ export default function VenderPage() {
     setPaymentCompleted(true);
     setCurrentStep(3);
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Marcar plano como pago
+    if (typeof window !== 'undefined' && selectedPlan) {
+      localStorage.setItem('selected_plan_paid', 'true');
+      localStorage.setItem('selected_plan', JSON.stringify({ id: selectedPlan.id, name: selectedPlan.name, price: selectedPlan.price }));
+    }
   };
 
   const handlePaymentCancel = () => {
@@ -156,6 +166,41 @@ export default function VenderPage() {
       setCurrentStep(4);
     }
   }, [isAuthenticated, currentStep]);
+
+  // Restaurar plano escolhido/pago
+  useEffect(() => {
+    if (persistedPlanChecked) return;
+    if (typeof window === 'undefined') return;
+    const paid = localStorage.getItem('selected_plan_paid') === 'true';
+    const raw = localStorage.getItem('selected_plan');
+    if (raw) {
+      try {
+        const p = JSON.parse(raw);
+        if (p?.id) {
+          setUserType(p.id);
+          setSelectedPlan({
+            id: p.id,
+            name: p.name || p.id,
+            price: p.price || 0,
+            duration: 'mês',
+            maxProperties: 1,
+            support: 'Email',
+            features: []
+          } as any);
+          // Redirecionar conforme status do pagamento
+          if (paid) {
+            // Já pagou: considerar passo 3 (formulário) e liberar renderização
+            setPaymentCompleted(true);
+            setCurrentStep(isAuthenticated ? 3 : 2);
+          } else {
+            // Ainda não pagou: se autenticado, retomar checkout
+            if (isAuthenticated) setCurrentStep(4);
+          }
+        }
+      } catch {}
+    }
+    setPersistedPlanChecked(true);
+  }, [isAuthenticated, persistedPlanChecked]);
 
   // Animação sutil entre steps usando GSAP com import dinâmico (client-only)
   useEffect(() => {

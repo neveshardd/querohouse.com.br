@@ -1,5 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { PropertyController } from '@/controllers/PropertyController';
+import jwt from 'jsonwebtoken';
+import { PrismaClient } from '@prisma/client';
 
 /**
  * Rotas de propriedades seguindo o princípio Open/Closed
@@ -77,38 +79,23 @@ export async function propertyRoutes(fastify: FastifyInstance) {
   });
 
   // Middleware de autenticação para rotas protegidas
+  const prisma = new PrismaClient();
   const authMiddleware = async (request: any, reply: any) => {
     const token = request.headers.authorization?.replace('Bearer ', '');
-    
     if (!token) {
-      return reply.status(401).send({
-        success: false,
-        error: 'Token não fornecido',
-      });
+      return reply.status(401).send({ success: false, error: 'Token não fornecido' });
     }
-
-    // Verificar se o token é válido
     try {
-      const { auth } = await import('@/config/database');
-      const session = await auth.api.getSession({
-        headers: {
-          authorization: `Bearer ${token}`,
-        } as any,
-      });
-
-      if (!session) {
-        return reply.status(401).send({
-          success: false,
-          error: 'Token inválido ou expirado',
-        });
+      // Validar JWT emitido pelo AuthServiceFixed
+      const secret = process.env.JWT_SECRET || 'your-secret-key-here';
+      const decoded = jwt.verify(token, secret) as any;
+      const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
+      if (!user) {
+        return reply.status(401).send({ success: false, error: 'Token inválido ou expirado' });
       }
-
-      (request as any).user = session.user;
+      (request as any).user = user;
     } catch (error) {
-      return reply.status(401).send({
-        success: false,
-        error: 'Erro na validação do token',
-      });
+      return reply.status(401).send({ success: false, error: 'Token inválido' });
     }
   };
 

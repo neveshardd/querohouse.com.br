@@ -51,15 +51,16 @@ api.interceptors.response.use(
       const isAuthRequest = error.config?.url?.includes('/sign-in') || 
                            error.config?.url?.includes('/sign-up') ||
                            error.config?.url?.includes('/sign-out');
+      const isPropertyPost = error.config?.method === 'post' && error.config?.url?.includes('/properties');
       
-      if (!isAuthRequest) {
+      if (!isAuthRequest && !isPropertyPost) {
         localStorage.removeItem('auth_token');
         localStorage.removeItem('refresh_token');
         window.location.href = '/';
       }
       
       // Para requisições de autenticação, não logar o erro no console
-      if (isAuthRequest) {
+      if (isAuthRequest || isPropertyPost) {
         // Silenciar o erro do console para requisições de autenticação
         error.silent = true;
       }
@@ -184,7 +185,9 @@ export const authService = {
         error: 'Erro ao fazer login'
       };
     } catch (error: any) {
-      console.error('Erro no login:', error);
+      if (!(error as any).silent) {
+        console.error('Erro no login:', error);
+      }
       return {
         success: false,
         error: error.response?.data?.error || error.message || 'Erro ao fazer login'
@@ -214,7 +217,9 @@ export const authService = {
         error: 'Erro ao criar conta'
       };
     } catch (error: any) {
-      console.error('Erro no registro:', error);
+      if (!(error as any).silent) {
+        console.error('Erro no registro:', error);
+      }
       return {
         success: false,
         error: error.response?.data?.error || error.message || 'Erro ao criar conta'
@@ -230,7 +235,9 @@ export const authService = {
         message: 'Logout realizado com sucesso'
       };
     } catch (error: any) {
-      console.error('Erro no logout:', error);
+      if (!(error as any).silent) {
+        console.error('Erro no logout:', error);
+      }
       return {
         success: false,
         error: error.response?.data?.error || error.message || 'Erro ao fazer logout'
@@ -254,7 +261,9 @@ export const authService = {
         error: 'Usuário não autenticado'
       };
     } catch (error: any) {
-      console.error('Erro ao obter perfil:', error);
+      if (!(error as any).silent) {
+        console.error('Erro ao obter perfil:', error);
+      }
       return {
         success: false,
         error: error.response?.data?.error || error.message || 'Usuário não autenticado'
@@ -278,7 +287,9 @@ export const authService = {
         error: 'Erro ao atualizar perfil'
       };
     } catch (error: any) {
-      console.error('Erro ao atualizar perfil:', error);
+      if (!(error as any).silent) {
+        console.error('Erro ao atualizar perfil:', error);
+      }
       return {
         success: false,
         error: error.response?.data?.error || error.message || 'Erro ao atualizar perfil'
@@ -300,7 +311,9 @@ export const authService = {
         message: 'Email de recuperação enviado'
       };
     } catch (error: any) {
-      console.error('Erro ao enviar email de recuperação:', error);
+      if (!(error as any).silent) {
+        console.error('Erro ao enviar email de recuperação:', error);
+      }
       return {
         success: false,
         error: error.response?.data?.error || error.message || 'Erro ao enviar email de recuperação'
@@ -322,7 +335,9 @@ export const authService = {
         message: 'Senha alterada com sucesso'
       };
     } catch (error: any) {
-      console.error('Erro ao alterar senha:', error);
+      if (!(error as any).silent) {
+        console.error('Erro ao alterar senha:', error);
+      }
       return {
         success: false,
         error: error.response?.data?.error || error.message || 'Erro ao alterar senha'

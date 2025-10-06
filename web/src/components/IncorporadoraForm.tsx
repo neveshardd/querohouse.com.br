@@ -1,6 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+import { propertyService } from '@/lib/api';
 
 interface IncorporadoraFormData {
   // Informações da empresa
@@ -47,6 +50,7 @@ interface IncorporadoraFormData {
 }
 
 export default function IncorporadoraForm() {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<IncorporadoraFormData>({
     nomeEmpresa: '',
@@ -137,11 +141,48 @@ export default function IncorporadoraForm() {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simular envio
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    alert('Empreendimento cadastrado com sucesso! Seu anúncio será publicado após a aprovação.');
-    setIsSubmitting(false);
+    try {
+      if (!formData.imagens || formData.imagens.length === 0) {
+        toast.error('Adicione ao menos uma imagem do empreendimento.');
+        setIsSubmitting(false);
+        return;
+      }
+      const payload = {
+        title: formData.nomeEmpreendimento,
+        description: formData.descricao,
+        price: Number(formData.preco || 0),
+        type: 'COMERCIAL' as const,
+        bedrooms: Number(formData.quartos || 1),
+        bathrooms: Number(formData.banheiros || 1),
+        area: Number(formData.area || 0),
+        address: formData.endereco,
+        city: formData.cidade,
+        state: formData.estado,
+        zipCode: formData.cep,
+        images: [],
+        features: formData.caracteristicas,
+      };
+
+      if (!payload.title || !payload.description || !payload.price || !payload.address || !payload.city || !payload.state) {
+        toast.error('Preencha todos os campos obrigatórios antes de publicar.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      const res = await propertyService.createProperty(payload as any);
+      if ((res as any)?.success === false) {
+        toast.error((res as any)?.error || 'Erro ao criar anúncio');
+        setIsSubmitting(false);
+        return;
+      }
+
+      toast.success('Empreendimento cadastrado com sucesso! Será publicado após a aprovação.');
+      router.push('/sucesso-anuncio');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || 'Erro ao criar anúncio.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const nextStep = () => {
@@ -169,11 +210,16 @@ export default function IncorporadoraForm() {
         <div className="flex items-center justify-between">
           {[1, 2, 3, 4, 5, 6].map((step) => (
             <div key={step} className="flex items-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                step <= currentStep ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
-              }`}>
+              <button
+                type="button"
+                onClick={() => setCurrentStep(step)}
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                  step <= currentStep ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
+                }`}
+                aria-label={`Ir para etapa ${step}`}
+              >
                 {step}
-              </div>
+              </button>
               {step < 6 && (
                 <div className={`w-12 h-1 mx-2 ${
                   step < currentStep ? 'bg-blue-600' : 'bg-gray-300'
@@ -192,7 +238,11 @@ export default function IncorporadoraForm() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-8">
+      <form onSubmit={handleSubmit} className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-8" onKeyDown={(e) => {
+        if ((e as any).key === 'Enter') {
+          (e as any).preventDefault();
+        }
+      }}>
         {/* Step 1: Dados da Empresa */}
         {currentStep === 1 && (
           <div className="space-y-6">
@@ -769,7 +819,7 @@ export default function IncorporadoraForm() {
           ) : (
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || formData.imagens.length === 0}
               className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? 'Publicando...' : 'Publicar Empreendimento'}

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
 import { Label, Card } from '@/components/ui/basic';
+import { toast } from 'sonner';
 import api from '@/lib/api';
 
 interface PaymentFormProps {
@@ -58,13 +59,14 @@ export default function PaymentForm({ plan, onPaymentSuccess, onCancel }: Paymen
 
       if (error) {
         console.error('Erro no pagamento:', error);
-        alert('Erro no pagamento: ' + error.message);
+        toast.error('Erro no pagamento: ' + (error.message || 'Tente novamente.'));
       } else {
+        toast.success('Pagamento confirmado!');
         onPaymentSuccess();
       }
     } catch (error) {
       console.error('Erro ao processar pagamento:', error);
-      alert('Erro ao processar pagamento. Tente novamente.');
+      toast.error('Erro ao processar pagamento. Tente novamente.');
     } finally {
       setIsProcessing(false);
     }
