@@ -7,7 +7,7 @@ import {
   AuthResponse,
   ApiResponse,
   User
-} from '@/types/auth';
+} from '../types/auth';
 
 const prisma = new PrismaClient();
 

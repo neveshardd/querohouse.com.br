@@ -3,13 +3,13 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import swagger from '@fastify/swagger';
-import { authRoutes } from '@/routes/auth';
-import { propertyRoutes } from '@/routes/properties';
-import { paymentRoutes } from '@/routes/payments';
-import { authMiddleware } from '@/middleware/auth';
+import { authRoutes } from './routes/auth';
+import { propertyRoutes } from './routes/properties';
+import { paymentRoutes } from './routes/payments';
+import { authMiddleware } from './middleware/auth';
 import ScalarApiReference from '@scalar/fastify-api-reference';
-import { logger } from '@/config/logger';
-import { auth } from '@/config/database';
+import { logger } from './config/logger';
+import { auth } from './config/database';
 
 /**
  * Servidor principal da API seguindo princípios SOLID

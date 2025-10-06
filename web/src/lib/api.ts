@@ -428,7 +428,7 @@ export const propertyService = {
 
   // Obter propriedades do usuário logado
   async getUserProperties(page: number = 1, limit: number = 10): Promise<PropertiesResponse> {
-    const response = await api.get(`/api/properties/user?page=${page}&limit=${limit}`);
+    const response = await api.get(`/api/properties/user/my-properties?page=${page}&limit=${limit}`);
     return response.data;
   },
 };

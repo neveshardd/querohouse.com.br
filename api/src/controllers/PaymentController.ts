@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { PaymentService } from '@/services/PaymentService';
+import { PaymentService } from '../services/PaymentService';
 
 export class PaymentController {
   async createPaymentIntent(request: FastifyRequest, reply: FastifyReply) {

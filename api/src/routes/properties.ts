@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { PropertyController } from '@/controllers/PropertyController';
+import { PropertyController } from '../controllers/PropertyController';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 

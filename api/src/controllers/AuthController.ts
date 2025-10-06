@@ -1,13 +1,13 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { AuthServiceFixed } from '@/services/AuthServiceFixed';
-import { logger } from '@/config/logger';
+import { AuthServiceFixed } from '../services/AuthServiceFixed';
+import { logger } from '../config/logger';
 import { 
   LoginSchema, 
   RegisterSchema, 
   ForgotPasswordSchema, 
   ResetPasswordSchema,
   UpdateProfileSchema 
-} from '@/types/auth';
+} from '../types/auth';
 
 /**
  * Controller de autenticação seguindo o princípio Single Responsibility

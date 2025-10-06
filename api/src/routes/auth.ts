@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { AuthController } from '@/controllers/AuthController';
+import { AuthController } from '../controllers/AuthController';
 
 /**
  * Rotas de autenticação usando Better Auth

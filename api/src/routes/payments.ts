@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { PaymentController } from '@/controllers/PaymentController';
+import { PaymentController } from '../controllers/PaymentController';
 
 /**
  * Rotas de pagamento seguindo o princípio Open/Closed

@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { auth } from '@/config/database';
+import { auth } from '../config/database';
 
 /**
  * Middleware de autenticação seguindo o princípio Single Responsibility

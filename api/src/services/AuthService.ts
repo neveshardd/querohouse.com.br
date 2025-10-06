@@ -1,4 +1,4 @@
-import { auth } from '@/config/database';
+import { auth } from '../config/database';
 import { 
   LoginRequest, 
   RegisterRequest, 
@@ -8,7 +8,7 @@ import {
   AuthResponse,
   ApiResponse,
   User
-} from '@/types/auth';
+} from '../types/auth';
 
 /**
  * Serviço de autenticação seguindo o princípio Single Responsibility
