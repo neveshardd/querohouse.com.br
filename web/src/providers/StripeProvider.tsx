@@ -15,7 +15,6 @@ interface StripeProviderProps {
 export default function StripeProvider({ children }: StripeProviderProps) {
   // Se não há chave do Stripe, renderizar children sem Elements
   if (!stripePublishableKey || !stripePromise) {
-    console.warn('Stripe publishable key not found. Stripe functionality will be disabled.');
     return <>{children}</>;
   }
 

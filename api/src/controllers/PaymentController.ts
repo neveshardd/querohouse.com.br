@@ -21,7 +21,6 @@ export class PaymentController {
         paymentIntentId: paymentIntent.id,
       });
     } catch (error) {
-      console.error('Erro no PaymentController:', error);
       return reply.status(500).send({
         success: false,
         error: 'Erro interno do servidor'
@@ -48,7 +47,6 @@ export class PaymentController {
         paymentIntent: result.paymentIntent,
       });
     } catch (error) {
-      console.error('Erro ao confirmar pagamento:', error);
       return reply.status(500).send({
         success: false,
         error: 'Erro interno do servidor'

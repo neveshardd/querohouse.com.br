@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { propertyService } from '@/lib/api';
+import { useCreateProperty } from '@/hooks/usePropertyMutations';
 
 interface ProprietarioFormData {
   // Informações pessoais
@@ -40,6 +40,7 @@ interface ProprietarioFormData {
 
 export default function ProprietarioForm() {
   const router = useRouter();
+  const createPropertyMutation = useCreateProperty();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<ProprietarioFormData>({
     nome: '',
@@ -64,8 +65,6 @@ export default function ProprietarioForm() {
     condominio: '',
     imagens: []
   });
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const availableFeatures = [
     'Quintal',
@@ -105,15 +104,27 @@ export default function ProprietarioForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
     
     try {
       // Imagem obrigatória
       if (!formData.imagens || formData.imagens.length === 0) {
         toast.error('Adicione ao menos uma imagem do imóvel.');
-        setIsSubmitting(false);
         return;
       }
+      
+      // Upload das imagens para R2 e montar payload
+      const uploadedUrls: string[] = [];
+      for (const file of formData.imagens) {
+        try {
+          const { uploadImage } = await import('@/lib/api');
+          const up = await uploadImage({ file, kind: 'property' });
+          uploadedUrls.push(up.url);
+        } catch (err: any) {
+          toast.error('Falha ao enviar uma das imagens. Tente novamente.');
+          return;
+        }
+      }
+
       // Mapear dados mínimos exigidos pela API
       const payload = {
         title: formData.titulo,
@@ -127,30 +138,22 @@ export default function ProprietarioForm() {
         city: formData.cidade,
         state: formData.estado,
         zipCode: formData.cep,
-        images: [],
+        images: uploadedUrls,
         features: formData.caracteristicas,
       };
 
       // Validação simples no cliente para evitar envio incompleto
       if (!payload.title || !payload.description || !payload.price || !payload.address || !payload.city || !payload.state) {
         toast.error('Preencha todos os campos obrigatórios antes de publicar.');
-        setIsSubmitting(false);
         return;
       }
 
-      const res = await propertyService.createProperty(payload as any);
-      if ((res as any)?.success === false) {
-        toast.error((res as any)?.error || 'Erro ao criar anúncio');
-        setIsSubmitting(false);
-        return;
-      }
-
+      // Usar a mutation do React Query
+      await createPropertyMutation.mutateAsync(payload as any);
       toast.success('Anúncio cadastrado com sucesso! Seu imóvel será publicado após a aprovação.');
       router.push('/sucesso-anuncio');
     } catch (err: any) {
-      toast.error(err?.response?.data?.error || 'Erro ao criar anúncio.');
-    } finally {
-      setIsSubmitting(false);
+      // O erro já é tratado pela mutation
     }
   };
 
@@ -639,10 +642,10 @@ export default function ProprietarioForm() {
           ) : (
             <button
               type="submit"
-              disabled={isSubmitting || formData.imagens.length === 0}
+              disabled={createPropertyMutation.isPending || formData.imagens.length === 0}
               className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Publicando...' : 'Publicar Anúncio'}
+              {createPropertyMutation.isPending ? 'Publicando...' : 'Publicar Anúncio'}
             </button>
           )}
         </div>

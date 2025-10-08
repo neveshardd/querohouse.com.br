@@ -2,113 +2,252 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { HomeIcon, MapPinIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline';
+import {
+  HomeIcon,
+  MapPinIcon,
+  HeartIcon,
+  EyeIcon,
+} from '@heroicons/react/24/outline';
+import { HeartIcon as HeartSolidIcon, StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { PropertyCardData, formatPrice } from '@/types/property';
 import gsap from 'gsap';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { BathIcon, BedIcon } from 'lucide-react';
 
 interface PropertyCardProps {
   property: PropertyCardData;
+  viewMode?: 'grid' | 'list';
 }
 
-export default function PropertyCard({ property }: PropertyCardProps) {
+export default function PropertyCard({ property, viewMode = 'grid' }: PropertyCardProps) {
   const cardRef = useRef<HTMLDivElement | null>(null);
+  const [isFavorited, setIsFavorited] = useState(false);
 
   useEffect(() => {
     const el = cardRef.current;
     if (!el) return;
-    gsap.fromTo(el, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.3, ease: 'power1.out' });
-
-    const onEnter = () => gsap.to(el, { y: -2, duration: 0.12, ease: 'power1.out' });
-    const onLeave = () => gsap.to(el, { y: 0, duration: 0.12, ease: 'power1.out' });
-    const onDown = () => gsap.to(el, { scale: 0.98, duration: 0.08, ease: 'power1.out' });
-    const onUp = () => gsap.to(el, { scale: 1, duration: 0.12, ease: 'power1.out' });
-
-    el.addEventListener('mouseenter', onEnter);
-    el.addEventListener('mouseleave', onLeave);
-    el.addEventListener('mousedown', onDown);
-    el.addEventListener('mouseup', onUp);
-    el.addEventListener('touchstart', onDown, { passive: true });
-    el.addEventListener('touchend', onUp, { passive: true });
-
-    return () => {
-      el.removeEventListener('mouseenter', onEnter);
-      el.removeEventListener('mouseleave', onLeave);
-      el.removeEventListener('mousedown', onDown);
-      el.removeEventListener('mouseup', onUp);
-      el.removeEventListener('touchstart', onDown);
-      el.removeEventListener('touchend', onUp);
-    };
+    gsap.fromTo(el, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.2, ease: 'power1.out' });
   }, []);
 
-  return (
-    <Link href={`/imoveis/${property.id}`} className="group">
-      <div 
-        ref={cardRef}
-        className="card hover-lift overflow-hidden"
-      >
-        <div className="relative">
-          <div className="w-full h-56 bg-slate-100 relative overflow-hidden">
+  const handleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsFavorited(!isFavorited);
+  };
+
+  if (viewMode === 'list') {
+    return (
+      <Link href={`/imoveis/${property.id}`} className="group">
+        <div
+          ref={cardRef}
+          className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden border border-slate-100 flex flex-col sm:flex-row"
+        >
+          {/* Imagem Principal - Lista Desktop */}
+          <div className="relative w-64 sm:w-96 h-72 flex-shrink-0 overflow-hidden hidden sm:block">
             <Image
               src={property.image}
               alt={property.title}
               fill
-              className="object-cover group-hover:scale-105 transition-smooth"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              priority={property.featured}
+              className="object-cover"
+              sizes="(max-width: 640px) 256px, 320px"
             />
-            {property.featured && (
-              <div className="absolute top-3 left-3 bg-amber-500 text-white px-2 py-1 rounded-md text-xs font-medium">
-                Destaque
+
+            {/* Botão Favorito */}
+            <button
+              onClick={handleFavorite}
+              className={`absolute cursor-pointer right-3 z-20 bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow-sm hover:bg-white transition-colors duration-200 ${
+                property.featured ? 'top-3' : 'top-3'
+              }`}
+            >
+              {isFavorited ? (
+                <HeartSolidIcon className="w-4 h-4 text-red-500" />
+              ) : (
+                <HeartIcon className="w-4 h-4 text-slate-600 hover:text-red-500 transition-colors" />
+              )}
+            </button>
+
+            {/* Indicador de Visualizações */}
+            <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-lg text-xs flex items-center">
+              <EyeIcon className="w-3 h-3 mr-1" />
+              <span>1.2k</span>
+            </div>
+          </div>
+
+          {/* Imagem Principal - Lista Mobile */}
+          <div className="relative w-full h-48 flex-shrink-0 overflow-hidden sm:hidden order-1">
+            <Image
+              src={property.image}
+              alt={property.title}
+              fill
+              className="object-cover"
+              sizes="100vw"
+            />
+
+
+            {/* Botão Favorito */}
+            <button
+              onClick={handleFavorite}
+              className={`absolute right-2 z-20 bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow-sm hover:bg-white transition-colors duration-200 ${
+                property.featured ? 'top-10' : 'top-2'
+              }`}
+            >
+              {isFavorited ? (
+                <HeartSolidIcon className="w-4 h-4 text-red-500" />
+              ) : (
+                <HeartIcon className="w-4 h-4 text-slate-600 hover:text-red-500 transition-colors" />
+              )}
+            </button>
+
+            {/* Indicador de Visualizações */}
+            <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-lg text-xs flex items-center">
+              <EyeIcon className="w-3 h-3 mr-1" />
+              <span>1.2k</span>
+            </div>
+          </div>
+
+          {/* Conteúdo do Card - Lista */}
+          <div className="flex-1 p-4 sm:p-6 flex flex-col justify-between min-w-0 order-2">
+            {/* Header com título e localização */}
+            <div className="mb-4">
+              <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors break-words">
+                {property.title}
+              </h3>
+              <div className="flex items-center text-slate-600">
+                <MapPinIcon className="w-4 h-4 mr-2 flex-shrink-0" />
+                <span className="text-sm truncate">Brasília, DF</span>
               </div>
-            )}
-            <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-slate-700 px-2 py-1 rounded-md text-xs font-medium">
-              {property.type}
+            </div>
+
+            {/* Informações detalhadas */}
+            <div className="space-y-3">
+              {/* Avaliação */}
+              <div className="flex items-center">
+                <div className="flex items-center bg-green-50 px-2 py-1 rounded-lg">
+                  <StarSolidIcon className="w-4 h-4 text-green-500 mr-1 flex-shrink-0" />
+                  <span className="text-green-700 font-bold text-sm">4.9</span>
+                  <span className="text-green-600 text-xs ml-1 hidden sm:inline">(187 avaliações)</span>
+                </div>
+              </div>
+
+              {/* Preço */}
+              <div>
+                <div className="flex items-baseline">
+                  <span className="text-2xl sm:text-3xl font-bold text-slate-900 break-words">
+                    {formatPrice(property.price)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Características detalhadas */}
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center flex-wrap gap-3">
+                  {property.bedrooms && (
+                    <div className="flex items-center bg-slate-50 px-2 py-1 rounded-md">
+                      <BedIcon className="w-4 h-4 mr-1 flex-shrink-0" />
+                      <span className="font-medium text-sm whitespace-nowrap">{property.bedrooms} quartos</span>
+                    </div>
+                  )}
+                  {property.bathrooms && (
+                    <div className="flex items-center bg-slate-50 px-2 py-1 rounded-md">
+                      <BathIcon className="w-4 h-4 mr-1 flex-shrink-0" />
+                      <span className="font-medium text-sm whitespace-nowrap">{property.bathrooms} banheiros</span>
+                    </div>
+                  )}
+                  {property.area && (
+                    <div className="flex items-center bg-slate-50 px-2 py-1 rounded-md">
+                      <HomeIcon className="w-4 h-4 mr-1 flex-shrink-0" />
+                      <span className="font-medium text-sm whitespace-nowrap">{property.area}m²</span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-slate-600">Disponível</div>
+                  <div className="text-xs text-green-600 font-medium">✓ Verificado</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+      </Link>
+    );
+  }
 
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-slate-900 mb-3 line-clamp-2 group-hover:text-slate-700 transition-smooth">
-            {property.title}
-          </h3>
+  // Modo Grid (enxuto)
+  return (
+    <Link href={`/imoveis/${property.id}`} className="group">
+        <div
+          ref={cardRef}
+          className="bg-white rounded-xl min-w-64 shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden border border-slate-100"
+        >
+        {/* Imagem Principal */}
+        <div className="relative h-48 sm:h-56 md:h-64 overflow-hidden">
+          <Image
+            src={property.image}
+            alt={property.title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
 
-          <div className="flex items-center text-slate-600 text-sm mb-4">
-            <MapPinIcon className="w-4 h-4 mr-2 flex-shrink-0" />
-            <span className="truncate">{property.location}</span>
+          {/* Botão Favorito */}
+          <button
+            onClick={handleFavorite}
+            className="absolute top-2 right-2 sm:top-4 sm:right-4 cursor-pointer bg-white/90 backdrop-blur-sm p-1.5 sm:p-2 rounded-full shadow-sm hover:bg-white transition-colors duration-200"
+          >
+            {isFavorited ? (
+              <HeartSolidIcon className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
+            ) : (
+              <HeartIcon className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600 hover:text-red-500 transition-colors" />
+            )}
+          </button>
+
+          {/* Indicador de Visualizações */}
+          <div className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 cursor-pointer bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-lg text-xs flex items-center">
+            <EyeIcon className="w-3 h-3 mr-1" />
+            <span className="hidden sm:inline">1.2k visualizações</span>
+            <span className="sm:hidden">1.2k</span>
+          </div>
+        </div>
+
+        {/* Conteúdo do Card - Grid (enxuto) */}
+        <div className="p-4 sm:p-6">
+          {/* Título */}
+          <div className="mb-3">
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors break-words">
+              {property.title}
+            </h3>
           </div>
 
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
-              <CurrencyDollarIcon className="w-5 h-5 text-slate-600 mr-1" />
-              <span className="text-2xl font-bold text-slate-900">
+          {/* Preço */}
+          <div className="mb-3">
+            <div className="flex items-baseline">
+              <span className="text-2xl sm:text-3xl font-bold text-slate-900 break-words">
                 {formatPrice(property.price)}
               </span>
             </div>
-            {property.area && (
-              <span className="text-sm text-slate-500 bg-slate-100 px-2 py-1 rounded-md">
-                {property.area}m²
-              </span>
-            )}
           </div>
 
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center space-x-4 text-slate-600">
+          {/* Características essenciais */}
+          <div className="flex items-center justify-between text-sm text-slate-600 gap-2">
+            <div className="flex items-center space-x-2 min-w-0">
               {property.bedrooms && (
-                <div className="flex items-center">
-                  <HomeIcon className="w-4 h-4 mr-1" />
-                  <span>{property.bedrooms} quartos</span>
+                <div className="flex items-center flex-shrink-0">
+                  <BedIcon className="w-4 h-4 mr-1" />
+                  <span className="font-medium text-xs sm:text-sm">{property.bedrooms}</span>
                 </div>
               )}
               {property.bathrooms && (
-                <div className="flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
-                  </svg>
-                  <span>{property.bathrooms} banheiros</span>
+                <div className="flex items-center flex-shrink-0">
+                  <BathIcon className="w-4 h-4 mr-1" />
+                  <span className="font-medium text-xs sm:text-sm">{property.bathrooms}</span>
                 </div>
               )}
             </div>
+            {property.area && (
+              <div className="bg-slate-100 px-2 py-1 rounded-lg flex-shrink-0">
+                <span className="font-medium text-slate-700 text-xs sm:text-sm whitespace-nowrap">{property.area}m²</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

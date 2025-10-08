@@ -215,4 +215,80 @@ export async function propertyRoutes(fastify: FastifyInstance) {
     },
     handler: propertyController.getUserProperties.bind(propertyController),
   });
+
+  // Rotas para página inicial
+  fastify.get('/properties/featured', {
+    schema: {
+      querystring: {
+        type: 'object',
+        properties: {
+          limit: { type: 'number', default: 4 },
+        },
+      },
+      tags: ['home'],
+      summary: 'Propriedades em destaque',
+      description: 'Lista propriedades em destaque para a página inicial',
+    },
+    handler: propertyController.getFeaturedProperties.bind(propertyController),
+  });
+
+  fastify.get('/properties/recent', {
+    schema: {
+      querystring: {
+        type: 'object',
+        properties: {
+          limit: { type: 'number', default: 3 },
+        },
+      },
+      tags: ['home'],
+      summary: 'Propriedades recentes',
+      description: 'Lista propriedades recentemente cadastradas',
+    },
+    handler: propertyController.getRecentProperties.bind(propertyController),
+  });
+
+  fastify.get('/properties/affordable', {
+    schema: {
+      querystring: {
+        type: 'object',
+        properties: {
+          limit: { type: 'number', default: 3 },
+          maxPrice: { type: 'number', default: 300000 },
+        },
+      },
+      tags: ['home'],
+      summary: 'Propriedades com melhor preço',
+      description: 'Lista propriedades com melhor custo-benefício',
+    },
+    handler: propertyController.getAffordableProperties.bind(propertyController),
+  });
+
+  fastify.get('/home/stats', {
+    schema: {
+      tags: ['home'],
+      summary: 'Estatísticas da página inicial',
+      description: 'Retorna estatísticas gerais do site',
+    },
+    handler: propertyController.getHomeStats.bind(propertyController),
+  });
+
+  // Rota para propriedades similares
+  fastify.get('/properties/similar', {
+    schema: {
+      querystring: {
+        type: 'object',
+        properties: {
+          limit: { type: 'number', default: 6 },
+          type: { type: 'string', enum: ['CASA', 'APARTAMENTO', 'TERRENO', 'COMERCIAL', 'RURAL'] },
+          city: { type: 'string' },
+          state: { type: 'string' },
+          excludeId: { type: 'string' },
+        },
+      },
+      tags: ['properties'],
+      summary: 'Propriedades similares',
+      description: 'Lista propriedades similares baseadas em filtros ou aleatórias',
+    },
+    handler: propertyController.getSimilarProperties.bind(propertyController),
+  });
 }

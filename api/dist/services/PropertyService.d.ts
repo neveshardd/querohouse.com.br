@@ -163,14 +163,17 @@ export declare class PropertyService {
                 page: number;
                 limit: number;
                 total: number;
+                totalPages: number;
                 pages: number;
+                hasNextPage: boolean;
+                hasPrevPage: boolean;
+                nextPage: number | null;
+                prevPage: number | null;
             };
         };
-        error?: undefined;
     } | {
         success: boolean;
         error: string;
-        data?: undefined;
     }>;
     updateProperty(id: string, data: UpdatePropertyRequest, userId: string): Promise<{
         success: boolean;
@@ -265,6 +268,185 @@ export declare class PropertyService {
                 total: number;
                 pages: number;
             };
+        };
+        error?: undefined;
+    } | {
+        success: boolean;
+        error: string;
+        data?: undefined;
+    }>;
+    getFeaturedProperties(limit?: number): Promise<{
+        success: boolean;
+        data: {
+            properties: {
+                images: any;
+                features: any;
+                user: {
+                    email: string;
+                    name: string;
+                    phone: string | null;
+                    id: string;
+                };
+                type: import(".prisma/client").$Enums.PropertyType;
+                status: import(".prisma/client").$Enums.PropertyStatus;
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                userId: string;
+                description: string;
+                title: string;
+                price: number;
+                bedrooms: number | null;
+                bathrooms: number | null;
+                area: number | null;
+                address: string;
+                city: string;
+                state: string;
+                zipCode: string | null;
+                latitude: number | null;
+                longitude: number | null;
+                isPublished: boolean;
+                views: number;
+            }[];
+        };
+        error?: undefined;
+    } | {
+        success: boolean;
+        error: string;
+        data?: undefined;
+    }>;
+    getRecentProperties(limit?: number): Promise<{
+        success: boolean;
+        data: {
+            properties: {
+                images: any;
+                features: any;
+                user: {
+                    email: string;
+                    name: string;
+                    phone: string | null;
+                    id: string;
+                };
+                type: import(".prisma/client").$Enums.PropertyType;
+                status: import(".prisma/client").$Enums.PropertyStatus;
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                userId: string;
+                description: string;
+                title: string;
+                price: number;
+                bedrooms: number | null;
+                bathrooms: number | null;
+                area: number | null;
+                address: string;
+                city: string;
+                state: string;
+                zipCode: string | null;
+                latitude: number | null;
+                longitude: number | null;
+                isPublished: boolean;
+                views: number;
+            }[];
+        };
+        error?: undefined;
+    } | {
+        success: boolean;
+        error: string;
+        data?: undefined;
+    }>;
+    getAffordableProperties(limit?: number, maxPrice?: number): Promise<{
+        success: boolean;
+        data: {
+            properties: {
+                images: any;
+                features: any;
+                user: {
+                    email: string;
+                    name: string;
+                    phone: string | null;
+                    id: string;
+                };
+                type: import(".prisma/client").$Enums.PropertyType;
+                status: import(".prisma/client").$Enums.PropertyStatus;
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                userId: string;
+                description: string;
+                title: string;
+                price: number;
+                bedrooms: number | null;
+                bathrooms: number | null;
+                area: number | null;
+                address: string;
+                city: string;
+                state: string;
+                zipCode: string | null;
+                latitude: number | null;
+                longitude: number | null;
+                isPublished: boolean;
+                views: number;
+            }[];
+        };
+        error?: undefined;
+    } | {
+        success: boolean;
+        error: string;
+        data?: undefined;
+    }>;
+    getHomeStats(): Promise<{
+        success: boolean;
+        data: {
+            totalProperties: number;
+            publishedProperties: number;
+            totalUsers: number;
+            totalViews: number;
+            averagePrice: number;
+            propertiesByType: {
+                type: import(".prisma/client").$Enums.PropertyType;
+                count: number;
+            }[];
+        };
+        error?: undefined;
+    } | {
+        success: boolean;
+        error: string;
+        data?: undefined;
+    }>;
+    getSimilarProperties(filters: any, limit: number, excludeId?: string): Promise<{
+        success: boolean;
+        data: {
+            properties: {
+                images: any;
+                features: any;
+                user: {
+                    email: string;
+                    name: string;
+                    phone: string | null;
+                    id: string;
+                };
+                type: import(".prisma/client").$Enums.PropertyType;
+                status: import(".prisma/client").$Enums.PropertyStatus;
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                userId: string;
+                description: string;
+                title: string;
+                price: number;
+                bedrooms: number | null;
+                bathrooms: number | null;
+                area: number | null;
+                address: string;
+                city: string;
+                state: string;
+                zipCode: string | null;
+                latitude: number | null;
+                longitude: number | null;
+                isPublished: boolean;
+                views: number;
+            }[];
         };
         error?: undefined;
     } | {

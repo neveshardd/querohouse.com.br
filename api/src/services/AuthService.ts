@@ -43,7 +43,6 @@ export class AuthService {
         },
       };
     } catch (error) {
-      console.error('Erro no login:', error);
       return {
         success: false,
         error: 'Credenciais inválidas',
@@ -73,7 +72,6 @@ export class AuthService {
         },
       } as any);
 
-      console.log('Resultado do signUpEmail:', result);
 
       if (!result) {
         return {
@@ -91,15 +89,11 @@ export class AuthService {
         },
       };
     } catch (error) {
-      console.error('Erro no registro:', error);
-      console.error('Tipo do erro:', typeof error);
-      console.error('Erro completo:', JSON.stringify(error, null, 2));
       
       // Extrair mensagem de erro mais específica
       let errorMessage = 'Erro interno do servidor';
       if (error instanceof Error) {
         const errorMsg = error.message.toLowerCase();
-        console.error('Mensagem de erro:', errorMsg);
         
         if (errorMsg.includes('email') && (errorMsg.includes('already') || errorMsg.includes('exists') || errorMsg.includes('duplicate'))) {
           errorMessage = 'Email já está em uso';
@@ -116,7 +110,6 @@ export class AuthService {
         }
       }
       
-      console.error('Erro específico no AuthService:', errorMessage);
       
       return {
         success: false,
@@ -202,7 +195,6 @@ export class AuthService {
         data: (result as any).user as User,
       };
     } catch (error) {
-      console.error('Erro ao atualizar perfil:', error);
       return {
         success: false,
         error: 'Erro ao atualizar perfil',

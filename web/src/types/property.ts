@@ -122,6 +122,11 @@ export interface PaginatedResponse<T> {
     limit: number;
     total: number;
     totalPages: number;
+    pages?: number; // Compatibilidade
+    hasNextPage?: boolean;
+    hasPrevPage?: boolean;
+    nextPage?: number | null;
+    prevPage?: number | null;
   };
 }
 
@@ -163,7 +168,7 @@ export function propertyToCardData(property: Property): PropertyCardData {
     bathrooms: property.bathrooms,
     area: property.area,
     type: property.type,
-    image: property.images[0] || '/placeholder-property.jpg',
+    image: property.images[0] || '/placeholder-property.svg',
     featured: property.isPublished,
     operation: 'venda' // Por enquanto, assumindo que todas são para venda
   };

@@ -58,14 +58,12 @@ export default function PaymentForm({ plan, onPaymentSuccess, onCancel }: Paymen
       });
 
       if (error) {
-        console.error('Erro no pagamento:', error);
         toast.error('Erro no pagamento: ' + (error.message || 'Tente novamente.'));
       } else {
         toast.success('Pagamento confirmado!');
         onPaymentSuccess();
       }
     } catch (error) {
-      console.error('Erro ao processar pagamento:', error);
       toast.error('Erro ao processar pagamento. Tente novamente.');
     } finally {
       setIsProcessing(false);

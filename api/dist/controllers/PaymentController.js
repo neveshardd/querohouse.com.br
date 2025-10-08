@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PaymentController = void 0;
-const PaymentService_1 = require("@/services/PaymentService");
+const PaymentService_1 = require("../services/PaymentService");
 class PaymentController {
     async createPaymentIntent(request, reply) {
         try {
@@ -20,7 +20,6 @@ class PaymentController {
             });
         }
         catch (error) {
-            console.error('Erro no PaymentController:', error);
             return reply.status(500).send({
                 success: false,
                 error: 'Erro interno do servidor'
@@ -44,7 +43,6 @@ class PaymentController {
             });
         }
         catch (error) {
-            console.error('Erro ao confirmar pagamento:', error);
             return reply.status(500).send({
                 success: false,
                 error: 'Erro interno do servidor'

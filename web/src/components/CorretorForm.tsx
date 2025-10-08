@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { propertyService } from '@/lib/api';
+import { useCreateProperty } from '@/hooks/usePropertyMutations';
 
 interface CorretorFormData {
   // Informações da empresa/corretor
@@ -49,6 +49,7 @@ interface CorretorFormData {
 
 export default function CorretorForm() {
   const router = useRouter();
+  const createPropertyMutation = useCreateProperty();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<CorretorFormData>({
     nomeEmpresa: '',
@@ -81,7 +82,6 @@ export default function CorretorForm() {
     imagens: []
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const availableFeatures = [
     'Piscina',
@@ -128,14 +128,13 @@ export default function CorretorForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
     
     try {
       if (!formData.imagens || formData.imagens.length === 0) {
         toast.error('Adicione ao menos uma imagem do imóvel.');
-        setIsSubmitting(false);
         return;
       }
+      
       const payload = {
         title: formData.titulo,
         description: formData.descricao,
@@ -154,23 +153,15 @@ export default function CorretorForm() {
 
       if (!payload.title || !payload.description || !payload.price || !payload.address || !payload.city || !payload.state) {
         toast.error('Preencha todos os campos obrigatórios antes de publicar.');
-        setIsSubmitting(false);
         return;
       }
 
-      const res = await propertyService.createProperty(payload as any);
-      if ((res as any)?.success === false) {
-        toast.error((res as any)?.error || 'Erro ao criar anúncio');
-        setIsSubmitting(false);
-        return;
-      }
-
+      // Usar a mutation do React Query
+      await createPropertyMutation.mutateAsync(payload as any);
       toast.success('Anúncio cadastrado com sucesso! Seu imóvel será publicado após a aprovação.');
       router.push('/sucesso-anuncio');
     } catch (err: any) {
-      toast.error(err?.response?.data?.error || 'Erro ao criar anúncio.');
-    } finally {
-      setIsSubmitting(false);
+      // O erro já é tratado pela mutation
     }
   };
 
@@ -781,10 +772,10 @@ export default function CorretorForm() {
           ) : (
             <button
               type="submit"
-              disabled={isSubmitting || formData.imagens.length === 0}
+              disabled={createPropertyMutation.isPending || formData.imagens.length === 0}
               className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Publicando...' : 'Publicar Anúncio'}
+              {createPropertyMutation.isPending ? 'Publicando...' : 'Publicar Anúncio'}
             </button>
           )}
         </div>

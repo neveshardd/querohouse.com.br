@@ -40,18 +40,18 @@ h3 {
   font-weight: 600;
 }
 
-/* Cores do sistema */
+/* Cores do sistema - Paleta React.dev */
 :root {
-  --color-primary: #1f2937;
+  --color-primary: #111827;
   --color-primary-light: #374151;
   --color-secondary: #6b7280;
-  --color-accent: #3b82f6;
-  --color-accent-light: #60a5fa;
+  --color-accent: #2563eb;
+  --color-accent-light: #3b82f6;
   --color-background: #ffffff;
   --color-surface: #f9fafb;
   --color-border: #e5e7eb;
   --color-border-light: #f3f4f6;
-  --color-text: #1f2937;
+  --color-text: #111827;
   --color-text-light: #6b7280;
   --color-text-muted: #9ca3af;
 }
@@ -104,31 +104,31 @@ h3 {
 
 /* Focus states elegantes - removido para compatibilidade com Tailwind */
 
-/* Botões elegantes */
+/* Botões minimalistas - Estilo React.dev */
 .btn-primary {
-  @apply bg-slate-900 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  @apply bg-gray-900 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
 }
 
 .btn-secondary {
-  @apply bg-white text-slate-900 border border-slate-200 px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  @apply bg-white text-gray-900 border border-gray-200 px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
 }
 
 .btn-ghost {
-  @apply text-slate-600 px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  @apply text-gray-600 px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
 }
 
-/* Cards elegantes */
+/* Cards minimalistas - Estilo React.dev */
 .card {
-  @apply bg-white border border-slate-200 rounded-xl shadow-sm transition-all duration-200 hover:shadow-md;
+  @apply bg-white border border-gray-200 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md;
 }
 
 .card-elevated {
-  @apply bg-white border border-slate-200 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl;
+  @apply bg-white border border-gray-200 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl;
 }
 
-/* Inputs elegantes */
+/* Inputs minimalistas - Estilo React.dev */
 .input {
-  @apply w-full px-4 py-3 border border-slate-200 rounded-lg bg-white text-slate-900 placeholder-slate-400 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none;
+  @apply w-full px-4 py-3 border border-gray-200 rounded-lg bg-white text-gray-900 placeholder-gray-400 transition-all duration-200 focus:border-gray-500 focus:ring-2 focus:ring-gray-100 focus:outline-none;
 }
 
 .input-error {

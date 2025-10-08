@@ -48,7 +48,6 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
             onError: (error, variables, context) => {
               // Só logar se não for um erro silencioso
               if (!(error as any)?.silent) {
-                console.error('Mutation error:', error);
               }
             },
           },

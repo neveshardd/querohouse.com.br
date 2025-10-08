@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PropertyController = void 0;
-const PropertyService_1 = require("@/services/PropertyService");
+const PropertyService_1 = require("../services/PropertyService");
 const zod_1 = require("zod");
 const CreatePropertySchema = zod_1.z.object({
     title: zod_1.z.string().min(1, 'Título é obrigatório'),
@@ -39,18 +39,28 @@ const UpdatePropertySchema = zod_1.z.object({
     features: zod_1.z.array(zod_1.z.string()).optional(),
     isPublished: zod_1.z.boolean().optional(),
 });
+const toNumber = (v) => (v === undefined || v === null || v === '' ? undefined : Number(v));
+const toInt = (v) => (v === undefined || v === null || v === '' ? undefined : parseInt(String(v), 10));
+const toBool = (v) => {
+    if (v === undefined || v === null || v === '')
+        return undefined;
+    if (typeof v === 'boolean')
+        return v;
+    const s = String(v).toLowerCase();
+    return s === 'true' || s === '1';
+};
 const PropertyFiltersSchema = zod_1.z.object({
     type: zod_1.z.enum(['CASA', 'APARTAMENTO', 'TERRENO', 'COMERCIAL', 'RURAL']).optional(),
     status: zod_1.z.enum(['ACTIVE', 'INACTIVE', 'SOLD', 'RENTED', 'PENDING']).optional(),
     city: zod_1.z.string().optional(),
     state: zod_1.z.string().optional(),
-    minPrice: zod_1.z.number().positive().optional(),
-    maxPrice: zod_1.z.number().positive().optional(),
-    bedrooms: zod_1.z.number().int().positive().optional(),
-    bathrooms: zod_1.z.number().int().positive().optional(),
-    minArea: zod_1.z.number().positive().optional(),
-    maxArea: zod_1.z.number().positive().optional(),
-    isPublished: zod_1.z.boolean().optional(),
+    minPrice: zod_1.z.preprocess(toNumber, zod_1.z.number().positive().optional()),
+    maxPrice: zod_1.z.preprocess(toNumber, zod_1.z.number().positive().optional()),
+    bedrooms: zod_1.z.preprocess(toInt, zod_1.z.number().int().positive().optional()),
+    bathrooms: zod_1.z.preprocess(toInt, zod_1.z.number().int().positive().optional()),
+    minArea: zod_1.z.preprocess(toNumber, zod_1.z.number().positive().optional()),
+    maxArea: zod_1.z.preprocess(toNumber, zod_1.z.number().positive().optional()),
+    isPublished: zod_1.z.preprocess(toBool, zod_1.z.boolean().optional()),
 });
 class PropertyController {
     propertyService;
@@ -155,6 +165,98 @@ class PropertyController {
             const page = parseInt(query.page) || 1;
             const limit = parseInt(query.limit) || 10;
             const result = await this.propertyService.getUserProperties(user.id, page, limit);
+            if (!result.success) {
+                return reply.status(400).send(result);
+            }
+            return reply.status(200).send(result);
+        }
+        catch (error) {
+            return reply.status(500).send({
+                success: false,
+                error: 'Erro interno do servidor',
+            });
+        }
+    }
+    async getFeaturedProperties(request, reply) {
+        try {
+            const query = request.query;
+            const limit = parseInt(query.limit) || 4;
+            const result = await this.propertyService.getFeaturedProperties(limit);
+            if (!result.success) {
+                return reply.status(400).send(result);
+            }
+            return reply.status(200).send(result);
+        }
+        catch (error) {
+            return reply.status(500).send({
+                success: false,
+                error: 'Erro interno do servidor',
+            });
+        }
+    }
+    async getRecentProperties(request, reply) {
+        try {
+            const query = request.query;
+            const limit = parseInt(query.limit) || 3;
+            const result = await this.propertyService.getRecentProperties(limit);
+            if (!result.success) {
+                return reply.status(400).send(result);
+            }
+            return reply.status(200).send(result);
+        }
+        catch (error) {
+            return reply.status(500).send({
+                success: false,
+                error: 'Erro interno do servidor',
+            });
+        }
+    }
+    async getAffordableProperties(request, reply) {
+        try {
+            const query = request.query;
+            const limit = parseInt(query.limit) || 3;
+            const maxPrice = parseInt(query.maxPrice) || 300000;
+            const result = await this.propertyService.getAffordableProperties(limit, maxPrice);
+            if (!result.success) {
+                return reply.status(400).send(result);
+            }
+            return reply.status(200).send(result);
+        }
+        catch (error) {
+            return reply.status(500).send({
+                success: false,
+                error: 'Erro interno do servidor',
+            });
+        }
+    }
+    async getHomeStats(request, reply) {
+        try {
+            const result = await this.propertyService.getHomeStats();
+            if (!result.success) {
+                return reply.status(400).send(result);
+            }
+            return reply.status(200).send(result);
+        }
+        catch (error) {
+            return reply.status(500).send({
+                success: false,
+                error: 'Erro interno do servidor',
+            });
+        }
+    }
+    async getSimilarProperties(request, reply) {
+        try {
+            const query = request.query;
+            const limit = parseInt(query.limit) || 6;
+            const excludeId = query.excludeId;
+            const filters = {};
+            if (query.type)
+                filters.type = query.type;
+            if (query.city)
+                filters.city = query.city;
+            if (query.state)
+                filters.state = query.state;
+            const result = await this.propertyService.getSimilarProperties(filters, limit, excludeId);
             if (!result.success) {
                 return reply.status(400).send(result);
             }

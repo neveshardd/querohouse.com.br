@@ -52,11 +52,12 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
   }, [loginMutation.isSuccess, loginMutation.isError, loginMutation.isPending, isOpen, isAuthenticated, onClose, onAuthSuccess]);
 
   useEffect(() => {
-    if (registerMutation.isSuccess && !registerMutation.isError && !registerMutation.isPending && isOpen && isAuthenticated) {
+    // Para registro, não precisamos verificar isAuthenticated pois o registro já autentica o usuário
+    if (registerMutation.isSuccess && !registerMutation.isError && !registerMutation.isPending && isOpen) {
       onAuthSuccess?.();
       onClose();
     }
-  }, [registerMutation.isSuccess, registerMutation.isError, registerMutation.isPending, isOpen, isAuthenticated, onClose, onAuthSuccess]);
+  }, [registerMutation.isSuccess, registerMutation.isError, registerMutation.isPending, isOpen, onClose, onAuthSuccess]);
 
   const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, [field]: e.target.value }));
@@ -71,14 +72,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    console.log('Validando formulário:', {
-      name: formData.name,
-      email: formData.email,
-      password: formData.password,
-      passwordLength: formData.password?.length,
-      confirmPassword: formData.confirmPassword,
-      isLogin
-    });
 
     if (!isLogin) {
       if (!formData.name) {
@@ -98,11 +91,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
       newErrors.password = 'Senha é obrigatória';
     } else if (formData.password.length < 6) {
       newErrors.password = 'Senha deve ter pelo menos 6 caracteres';
-      console.log('Erro de validação de senha:', {
-        password: formData.password,
-        length: formData.password.length,
-        required: 6
-      });
     }
 
     if (!isLogin) {
@@ -111,7 +99,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
       }
     }
 
-    console.log('Erros de validação:', newErrors);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -119,23 +106,11 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log('Submetendo formulário:', {
-      isLogin,
-      formData: {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        passwordLength: formData.password?.length,
-        phone: formData.phone
-      }
-    });
 
     if (!validateForm()) {
-      console.log('Validação falhou, não enviando');
       return;
     }
 
-    console.log('Validação passou, enviando dados');
 
     if (isLogin) {
       login({ email: formData.email, password: formData.password });
@@ -157,7 +132,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
 
       // Só logar no console se não for um erro silencioso de autenticação
       if (!(error as any)?.silent) {
-        console.error('Erro de autenticação:', error);
       }
 
       // Extrair mensagem de erro mais específica da API
@@ -194,7 +168,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
   }, [isLogin]);
 
   const handleGoogleLogin = () => {
-    console.log('Login com Google');
   };
 
   useEffect(() => {

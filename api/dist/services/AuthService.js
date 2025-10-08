@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
-const database_1 = require("@/config/database");
+const database_1 = require("../config/database");
 class AuthService {
     async login(credentials) {
         try {
@@ -27,7 +27,6 @@ class AuthService {
             };
         }
         catch (error) {
-            console.error('Erro no login:', error);
             return {
                 success: false,
                 error: 'Credenciais inválidas',
@@ -51,7 +50,6 @@ class AuthService {
                     name: userData.name,
                 },
             });
-            console.log('Resultado do signUpEmail:', result);
             if (!result) {
                 return {
                     success: false,
@@ -68,13 +66,9 @@ class AuthService {
             };
         }
         catch (error) {
-            console.error('Erro no registro:', error);
-            console.error('Tipo do erro:', typeof error);
-            console.error('Erro completo:', JSON.stringify(error, null, 2));
             let errorMessage = 'Erro interno do servidor';
             if (error instanceof Error) {
                 const errorMsg = error.message.toLowerCase();
-                console.error('Mensagem de erro:', errorMsg);
                 if (errorMsg.includes('email') && (errorMsg.includes('already') || errorMsg.includes('exists') || errorMsg.includes('duplicate'))) {
                     errorMessage = 'Email já está em uso';
                 }
@@ -94,7 +88,6 @@ class AuthService {
                     errorMessage = error.message;
                 }
             }
-            console.error('Erro específico no AuthService:', errorMessage);
             return {
                 success: false,
                 error: errorMessage,
@@ -165,7 +158,6 @@ class AuthService {
             };
         }
         catch (error) {
-            console.error('Erro ao atualizar perfil:', error);
             return {
                 success: false,
                 error: 'Erro ao atualizar perfil',

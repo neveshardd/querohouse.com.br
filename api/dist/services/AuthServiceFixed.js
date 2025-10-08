@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthServiceFixed = void 0;
 const client_1 = require("@prisma/client");
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const prisma = new client_1.PrismaClient();
 class AuthServiceFixed {
@@ -22,7 +23,14 @@ class AuthServiceFixed {
                 };
             }
             const credentialsAccount = user.accounts.find(account => account.type === 'credentials' && account.provider === 'credentials');
-            if (!credentialsAccount) {
+            if (!credentialsAccount || !credentialsAccount.passwordHash) {
+                return {
+                    success: false,
+                    error: 'Credenciais inválidas',
+                };
+            }
+            const isValidPassword = await bcryptjs_1.default.compare(credentials.password, credentialsAccount.passwordHash);
+            if (!isValidPassword) {
                 return {
                     success: false,
                     error: 'Credenciais inválidas',
@@ -49,7 +57,6 @@ class AuthServiceFixed {
             };
         }
         catch (error) {
-            console.error('Erro no login:', error);
             return {
                 success: false,
                 error: 'Credenciais inválidas',
@@ -67,6 +74,8 @@ class AuthServiceFixed {
                     error: 'Email já está em uso',
                 };
             }
+            const salt = await bcryptjs_1.default.genSalt(10);
+            const passwordHash = await bcryptjs_1.default.hash(userData.password, salt);
             const user = await prisma.user.create({
                 data: {
                     name: userData.name,
@@ -82,6 +91,7 @@ class AuthServiceFixed {
                     type: 'credentials',
                     provider: 'credentials',
                     providerAccountId: user.email,
+                    passwordHash,
                 }
             });
             const token = jsonwebtoken_1.default.sign({ userId: user.id, email: user.email }, this.jwtSecret, { expiresIn: '7d' });
@@ -105,7 +115,6 @@ class AuthServiceFixed {
             };
         }
         catch (error) {
-            console.error('Erro no registro:', error);
             return {
                 success: false,
                 error: 'Erro ao criar conta',

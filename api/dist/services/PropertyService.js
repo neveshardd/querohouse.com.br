@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PropertyService = void 0;
-const database_1 = require("@/config/database");
+const database_1 = require("../config/database");
 class PropertyService {
     async createProperty(data) {
         try {
@@ -130,18 +130,33 @@ class PropertyService {
                 images: JSON.parse(property.images),
                 features: JSON.parse(property.features),
             }));
-            return {
+            const totalPages = Math.ceil(total / limit);
+            const hasNextPage = page < totalPages;
+            const hasPrevPage = page > 1;
+            const paginationData = {
+                page,
+                limit,
+                total,
+                totalPages,
+                pages: totalPages,
+                hasNextPage,
+                hasPrevPage,
+                nextPage: hasNextPage ? page + 1 : null,
+                prevPage: hasPrevPage ? page - 1 : null,
+            };
+            console.log('🔍 PropertyService - Dados de paginação:', paginationData);
+            console.log('🔍 PropertyService - Total de propriedades:', total);
+            console.log('🔍 PropertyService - Página atual:', page);
+            console.log('🔍 PropertyService - Limite:', limit);
+            const result = {
                 success: true,
                 data: {
                     properties: formattedProperties,
-                    pagination: {
-                        page,
-                        limit,
-                        total,
-                        pages: Math.ceil(total / limit),
-                    },
+                    pagination: paginationData,
                 },
             };
+            console.log('🔍 PropertyService - Resultado final:', JSON.stringify(result, null, 2));
+            return result;
         }
         catch (error) {
             return {
@@ -286,6 +301,255 @@ class PropertyService {
             return {
                 success: false,
                 error: 'Erro ao obter propriedades do usuário',
+            };
+        }
+    }
+    async getFeaturedProperties(limit = 4) {
+        try {
+            const properties = await database_1.prisma.property.findMany({
+                where: {
+                    isPublished: true,
+                    status: 'ACTIVE',
+                },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                            email: true,
+                            phone: true,
+                        },
+                    },
+                },
+                orderBy: [
+                    { views: 'desc' },
+                    { createdAt: 'desc' }
+                ],
+                take: limit,
+            });
+            const formattedProperties = properties.map(property => ({
+                ...property,
+                images: JSON.parse(property.images),
+                features: JSON.parse(property.features),
+            }));
+            return {
+                success: true,
+                data: {
+                    properties: formattedProperties,
+                },
+            };
+        }
+        catch (error) {
+            return {
+                success: false,
+                error: 'Erro ao obter propriedades em destaque',
+            };
+        }
+    }
+    async getRecentProperties(limit = 3) {
+        try {
+            const properties = await database_1.prisma.property.findMany({
+                where: {
+                    isPublished: true,
+                    status: 'ACTIVE',
+                },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                            email: true,
+                            phone: true,
+                        },
+                    },
+                },
+                orderBy: { createdAt: 'desc' },
+                take: limit,
+            });
+            const formattedProperties = properties.map(property => ({
+                ...property,
+                images: JSON.parse(property.images),
+                features: JSON.parse(property.features),
+            }));
+            return {
+                success: true,
+                data: {
+                    properties: formattedProperties,
+                },
+            };
+        }
+        catch (error) {
+            return {
+                success: false,
+                error: 'Erro ao obter propriedades recentes',
+            };
+        }
+    }
+    async getAffordableProperties(limit = 3, maxPrice = 300000) {
+        try {
+            const properties = await database_1.prisma.property.findMany({
+                where: {
+                    isPublished: true,
+                    status: 'ACTIVE',
+                    price: {
+                        lte: maxPrice,
+                    },
+                },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                            email: true,
+                            phone: true,
+                        },
+                    },
+                },
+                orderBy: [
+                    { price: 'asc' },
+                    { views: 'desc' }
+                ],
+                take: limit,
+            });
+            const formattedProperties = properties.map(property => ({
+                ...property,
+                images: JSON.parse(property.images),
+                features: JSON.parse(property.features),
+            }));
+            return {
+                success: true,
+                data: {
+                    properties: formattedProperties,
+                },
+            };
+        }
+        catch (error) {
+            return {
+                success: false,
+                error: 'Erro ao obter propriedades com melhor preço',
+            };
+        }
+    }
+    async getHomeStats() {
+        try {
+            const [totalProperties, publishedProperties, totalUsers, totalViews, propertiesByType, averagePrice] = await Promise.all([
+                database_1.prisma.property.count(),
+                database_1.prisma.property.count({ where: { isPublished: true } }),
+                database_1.prisma.user.count(),
+                database_1.prisma.property.aggregate({
+                    _sum: { views: true },
+                }),
+                database_1.prisma.property.groupBy({
+                    by: ['type'],
+                    _count: { type: true },
+                    where: { isPublished: true },
+                }),
+                database_1.prisma.property.aggregate({
+                    _avg: { price: true },
+                    where: { isPublished: true },
+                }),
+            ]);
+            return {
+                success: true,
+                data: {
+                    totalProperties,
+                    publishedProperties,
+                    totalUsers,
+                    totalViews: totalViews._sum.views || 0,
+                    averagePrice: Math.round(averagePrice._avg.price || 0),
+                    propertiesByType: propertiesByType.map(item => ({
+                        type: item.type,
+                        count: item._count.type,
+                    })),
+                },
+            };
+        }
+        catch (error) {
+            return {
+                success: false,
+                error: 'Erro ao obter estatísticas',
+            };
+        }
+    }
+    async getSimilarProperties(filters, limit, excludeId) {
+        try {
+            const whereClause = {
+                isPublished: true,
+                status: 'ACTIVE',
+            };
+            if (filters.type)
+                whereClause.type = filters.type;
+            if (filters.city)
+                whereClause.city = filters.city;
+            if (filters.state)
+                whereClause.state = filters.state;
+            if (excludeId)
+                whereClause.id = { not: excludeId };
+            if (Object.keys(filters).length === 0) {
+                const properties = await database_1.prisma.property.findMany({
+                    where: whereClause,
+                    orderBy: [
+                        { views: 'desc' },
+                        { createdAt: 'desc' }
+                    ],
+                    take: limit,
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                phone: true,
+                            },
+                        },
+                    },
+                });
+                const formattedProperties = properties.map(property => ({
+                    ...property,
+                    images: JSON.parse(property.images),
+                    features: JSON.parse(property.features),
+                }));
+                return {
+                    success: true,
+                    data: {
+                        properties: formattedProperties,
+                    },
+                };
+            }
+            const properties = await database_1.prisma.property.findMany({
+                where: whereClause,
+                orderBy: [
+                    { views: 'desc' },
+                    { createdAt: 'desc' }
+                ],
+                take: limit,
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                            email: true,
+                            phone: true,
+                        },
+                    },
+                },
+            });
+            const formattedProperties = properties.map(property => ({
+                ...property,
+                images: JSON.parse(property.images),
+                features: JSON.parse(property.features),
+            }));
+            return {
+                success: true,
+                data: {
+                    properties: formattedProperties,
+                },
+            };
+        }
+        catch (error) {
+            return {
+                success: false,
+                error: 'Erro ao obter propriedades similares',
             };
         }
     }

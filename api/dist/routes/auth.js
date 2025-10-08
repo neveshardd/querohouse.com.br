@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.authRoutes = authRoutes;
-const AuthController_1 = require("@/controllers/AuthController");
+const AuthController_1 = require("../controllers/AuthController");
 async function authRoutes(fastify) {
     const authController = new AuthController_1.AuthController();
     const loginSchema = {

@@ -58,7 +58,6 @@ export function useAuth() {
     onError: (error: ApiError) => {
       // Só logar no console se não for um erro silencioso de autenticação
       if (!(error as any).silent) {
-        console.error('Erro no login:', error);
       }
       
       // Limpar tokens em caso de erro
@@ -95,7 +94,6 @@ export function useAuth() {
     onError: (error: ApiError) => {
       // Só logar no console se não for um erro silencioso de autenticação
       if (!(error as any).silent) {
-        console.error('Erro no registro:', error);
       }
       
       // Limpar tokens em caso de erro

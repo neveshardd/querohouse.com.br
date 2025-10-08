@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
-const AuthServiceFixed_1 = require("@/services/AuthServiceFixed");
-const logger_1 = require("@/config/logger");
-const auth_1 = require("@/types/auth");
+const AuthServiceFixed_1 = require("../services/AuthServiceFixed");
+const logger_1 = require("../config/logger");
+const auth_1 = require("../types/auth");
 class AuthController {
     authService;
     constructor() {

@@ -6,6 +6,7 @@ import swagger from '@fastify/swagger';
 import { authRoutes } from './routes/auth';
 import { propertyRoutes } from './routes/properties';
 import { paymentRoutes } from './routes/payments';
+import { uploadRoutes } from './routes/uploads';
 import { authMiddleware } from './middleware/auth';
 import ScalarApiReference from '@scalar/fastify-api-reference';
 import { logger } from './config/logger';
@@ -32,10 +33,12 @@ async function buildServer() {
       process.env.FRONTEND_URL || 'http://localhost:3000',
       'http://localhost:3000',
       'http://127.0.0.1:3000',
+      'http://localhost:3002',
+      'http://127.0.0.1:3002',
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-upload-kind'],
   });
 
   // Configuração de segurança
@@ -62,12 +65,6 @@ async function buildServer() {
           email: 'contato@querohouse.com.br',
         },
       },
-      servers: [
-        {
-          url: process.env.API_URL || 'http://localhost:3001',
-          description: 'Servidor de desenvolvimento',
-        },
-      ],
       components: {
         securitySchemes: {
           bearerAuth: {
@@ -124,6 +121,7 @@ async function buildServer() {
   await fastify.register(authRoutes, { prefix: '/api/auth' });
   await fastify.register(propertyRoutes, { prefix: '/api' });
   await fastify.register(paymentRoutes, { prefix: '/api/payments' });
+  await fastify.register(uploadRoutes, { prefix: '/api' });
 
   // Rota de health check
   fastify.get('/health', async (request, reply) => {

@@ -1,40 +1,12 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.propertyRoutes = propertyRoutes;
-const PropertyController_1 = require("@/controllers/PropertyController");
+const PropertyController_1 = require("../controllers/PropertyController");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const client_1 = require("@prisma/client");
 async function propertyRoutes(fastify) {
     const propertyController = new PropertyController_1.PropertyController();
     fastify.get('/properties', {
@@ -102,34 +74,23 @@ async function propertyRoutes(fastify) {
         },
         handler: propertyController.getPropertyById.bind(propertyController),
     });
+    const prisma = new client_1.PrismaClient();
     const authMiddleware = async (request, reply) => {
         const token = request.headers.authorization?.replace('Bearer ', '');
         if (!token) {
-            return reply.status(401).send({
-                success: false,
-                error: 'Token não fornecido',
-            });
+            return reply.status(401).send({ success: false, error: 'Token não fornecido' });
         }
         try {
-            const { auth } = await Promise.resolve().then(() => __importStar(require('@/config/database')));
-            const session = await auth.api.getSession({
-                headers: {
-                    authorization: `Bearer ${token}`,
-                },
-            });
-            if (!session) {
-                return reply.status(401).send({
-                    success: false,
-                    error: 'Token inválido ou expirado',
-                });
+            const secret = process.env.JWT_SECRET || 'your-secret-key-here';
+            const decoded = jsonwebtoken_1.default.verify(token, secret);
+            const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
+            if (!user) {
+                return reply.status(401).send({ success: false, error: 'Token inválido ou expirado' });
             }
-            request.user = session.user;
+            request.user = user;
         }
         catch (error) {
-            return reply.status(401).send({
-                success: false,
-                error: 'Erro na validação do token',
-            });
+            return reply.status(401).send({ success: false, error: 'Token inválido' });
         }
     };
     fastify.post('/properties', {
@@ -244,6 +205,75 @@ async function propertyRoutes(fastify) {
             security: [{ bearerAuth: [] }],
         },
         handler: propertyController.getUserProperties.bind(propertyController),
+    });
+    fastify.get('/properties/featured', {
+        schema: {
+            querystring: {
+                type: 'object',
+                properties: {
+                    limit: { type: 'number', default: 4 },
+                },
+            },
+            tags: ['home'],
+            summary: 'Propriedades em destaque',
+            description: 'Lista propriedades em destaque para a página inicial',
+        },
+        handler: propertyController.getFeaturedProperties.bind(propertyController),
+    });
+    fastify.get('/properties/recent', {
+        schema: {
+            querystring: {
+                type: 'object',
+                properties: {
+                    limit: { type: 'number', default: 3 },
+                },
+            },
+            tags: ['home'],
+            summary: 'Propriedades recentes',
+            description: 'Lista propriedades recentemente cadastradas',
+        },
+        handler: propertyController.getRecentProperties.bind(propertyController),
+    });
+    fastify.get('/properties/affordable', {
+        schema: {
+            querystring: {
+                type: 'object',
+                properties: {
+                    limit: { type: 'number', default: 3 },
+                    maxPrice: { type: 'number', default: 300000 },
+                },
+            },
+            tags: ['home'],
+            summary: 'Propriedades com melhor preço',
+            description: 'Lista propriedades com melhor custo-benefício',
+        },
+        handler: propertyController.getAffordableProperties.bind(propertyController),
+    });
+    fastify.get('/home/stats', {
+        schema: {
+            tags: ['home'],
+            summary: 'Estatísticas da página inicial',
+            description: 'Retorna estatísticas gerais do site',
+        },
+        handler: propertyController.getHomeStats.bind(propertyController),
+    });
+    fastify.get('/properties/similar', {
+        schema: {
+            querystring: {
+                type: 'object',
+                properties: {
+                    limit: { type: 'number', default: 6 },
+                    type: { type: 'string', enum: ['CASA', 'APARTAMENTO', 'TERRENO', 'COMERCIAL', 'RURAL'] },
+                    city: { type: 'string' },
+                    state: { type: 'string' },
+                    excludeId: { type: 'string' },
+                },
+            },
+            tags: ['properties'],
+            summary: 'Propriedades similares',
+            description: 'Lista propriedades similares baseadas em filtros ou aleatórias',
+        },
+        handler: propertyController.getSimilarProperties.bind(propertyController),
     });
 }
 //# sourceMappingURL=properties.js.map

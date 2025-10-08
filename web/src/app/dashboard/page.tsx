@@ -3,82 +3,30 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-
-interface Property {
-  id: string;
-  title: string;
-  price: number;
-  status: 'active' | 'pending' | 'expired';
-  views: number;
-  contacts: number;
-  createdAt: string;
-  image: string;
-}
-
-interface UserStats {
-  totalProperties: number;
-  activeProperties: number;
-  totalViews: number;
-  totalContacts: number;
-  planName: string;
-  planExpiry: string;
-}
+import { useQuery } from '@tanstack/react-query';
+import { propertyService } from '@/lib/api';
+import { Property } from '@/types/property';
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Dados mockados
-  const userStats: UserStats = {
-    totalProperties: 5,
-    activeProperties: 3,
-    totalViews: 1247,
-    totalContacts: 23,
+  // Buscar propriedades do usuário
+  const { data: propertiesResponse, isLoading: propertiesLoading } = useQuery({
+    queryKey: ['user-properties'],
+    queryFn: () => propertyService.getUserProperties(1, 10),
+  });
+
+  const properties = propertiesResponse?.data?.data || [];
+
+  // Calcular estatísticas
+  const userStats = {
+    totalProperties: properties.length,
+    activeProperties: properties.filter(p => p.status === 'ACTIVE').length,
+    totalViews: properties.reduce((sum, p) => sum + p.views, 0),
+    totalContacts: 0,
     planName: 'Profissional',
     planExpiry: '2024-02-15'
   };
-
-  const properties: Property[] = [
-    {
-      id: '1',
-      title: 'Casa com 3 quartos em condomínio fechado',
-      price: 450000,
-      status: 'active',
-      views: 156,
-      contacts: 8,
-      createdAt: '2024-01-15',
-      image: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=300&h=200&fit=crop'
-    },
-    {
-      id: '2',
-      title: 'Apartamento moderno com vista para o mar',
-      price: 320000,
-      status: 'active',
-      views: 89,
-      contacts: 5,
-      createdAt: '2024-01-10',
-      image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=300&h=200&fit=crop'
-    },
-    {
-      id: '3',
-      title: 'Casa térrea com quintal amplo',
-      price: 280000,
-      status: 'pending',
-      views: 0,
-      contacts: 0,
-      createdAt: '2024-01-20',
-      image: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=300&h=200&fit=crop'
-    },
-    {
-      id: '4',
-      title: 'Apartamento próximo ao metrô',
-      price: 180000,
-      status: 'expired',
-      views: 234,
-      contacts: 12,
-      createdAt: '2023-12-01',
-      image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=300&h=200&fit=crop'
-    }
-  ];
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -90,23 +38,41 @@ export default function DashboardPage() {
 
   const getStatusBadge = (status: string) => {
     const styles = {
-      active: 'bg-green-100 text-green-800',
-      pending: 'bg-yellow-100 text-yellow-800',
-      expired: 'bg-red-100 text-red-800'
+      ACTIVE: 'bg-green-100 text-green-800',
+      PENDING: 'bg-yellow-100 text-yellow-800',
+      INACTIVE: 'bg-red-100 text-red-800',
+      SOLD: 'bg-blue-100 text-blue-800',
+      RENTED: 'bg-purple-100 text-purple-800'
     };
     
     const labels = {
-      active: 'Ativo',
-      pending: 'Pendente',
-      expired: 'Expirado'
+      ACTIVE: 'Ativo',
+      PENDING: 'Pendente',
+      INACTIVE: 'Inativo',
+      SOLD: 'Vendido',
+      RENTED: 'Alugado'
     };
 
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status as keyof typeof styles]}`}>
-        {labels[status as keyof typeof labels]}
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status as keyof typeof styles] || 'bg-gray-100 text-gray-800'}`}>
+        {labels[status as keyof typeof labels] || status}
       </span>
     );
   };
+
+  // Loading state
+  if (propertiesLoading) {
+    return (
+      <ProtectedRoute>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Carregando dashboard...</p>
+          </div>
+        </div>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute>
@@ -236,7 +202,7 @@ export default function DashboardPage() {
                       {properties.slice(0, 3).map((property) => (
                         <div key={property.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                           <img
-                            src={property.image}
+                            src={property.images?.[0] || '/placeholder-property.svg'}
                             alt={property.title}
                             className="w-12 h-12 object-cover rounded"
                           />
@@ -315,7 +281,7 @@ export default function DashboardPage() {
                   {properties.map((property) => (
                     <div key={property.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
                       <img
-                        src={property.image}
+                        src={property.images?.[0] || '/placeholder-property.svg'}
                         alt={property.title}
                         className="w-full h-48 object-cover"
                       />
@@ -333,7 +299,7 @@ export default function DashboardPage() {
                         
                         <div className="flex justify-between text-sm text-gray-600 mb-4">
                           <span>👁️ {property.views} visualizações</span>
-                          <span>📞 {property.contacts} contatos</span>
+                          <span>📞 0 contatos</span>
                         </div>
                         
                         <div className="flex space-x-2">

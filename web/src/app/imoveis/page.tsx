@@ -1,17 +1,53 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import PropertyList from '@/components/PropertyList';
 import SearchBar from '@/components/SearchBar';
+import Pagination from '@/components/Pagination';
+import PageSizeSelector from '@/components/PageSizeSelector';
+import YouMayAlsoLike from '@/components/YouMayAlsoLike';
+import { usePropertiesSimple } from '@/hooks/usePropertiesSimple';
 import { PropertyType, PropertyFilters } from '@/types/property';
+import { useSearchParams } from 'next/navigation';
 
 export default function ImoveisPage() {
+  const searchParams = useSearchParams();
   const [sortBy, setSortBy] = useState('relevance');
   const [viewMode, setViewMode] = useState('grid');
-  const [filters, setFilters] = useState<PropertyFilters>({});
   const [priceRange, setPriceRange] = useState<string[]>([]);
   const [bedroomsFilter, setBedroomsFilter] = useState<string[]>([]);
   const [bathroomsFilter, setBathroomsFilter] = useState<string[]>([]);
+  
+  // Estados locais para paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSizeState] = useState(6);
+  const [filters, setFilters] = useState<PropertyFilters>({});
+
+  // Hook simples
+  const {
+    properties,
+    loading,
+    error,
+    pagination,
+    refetch
+  } = usePropertiesSimple(filters, currentPage, pageSize);
+
+  // Aplicar filtros da URL na montagem do componente
+  useEffect(() => {
+    const urlFilters: PropertyFilters = {};
+    
+    if (searchParams.get('city')) urlFilters.city = searchParams.get('city')!;
+    if (searchParams.get('state')) urlFilters.state = searchParams.get('state')!;
+    if (searchParams.get('type')) urlFilters.type = searchParams.get('type') as PropertyType;
+    if (searchParams.get('minPrice')) urlFilters.minPrice = parseInt(searchParams.get('minPrice')!);
+    if (searchParams.get('maxPrice')) urlFilters.maxPrice = parseInt(searchParams.get('maxPrice')!);
+    if (searchParams.get('bedrooms')) urlFilters.bedrooms = parseInt(searchParams.get('bedrooms')!);
+    if (searchParams.get('bathrooms')) urlFilters.bathrooms = parseInt(searchParams.get('bathrooms')!);
+    
+    if (Object.keys(urlFilters).length > 0) {
+      setFilters(urlFilters);
+    }
+  }, [searchParams]);
 
   const handleSortChange = (sort: string) => {
     setSortBy(sort);
@@ -20,7 +56,13 @@ export default function ImoveisPage() {
 
   const handleFilterChange = useCallback((newFilters: PropertyFilters) => {
     setFilters(newFilters);
+    setCurrentPage(1); // Reset para primeira página
   }, []);
+
+  // Reset página quando filtros mudam
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
 
   const handlePriceRangeChange = (range: string, checked: boolean) => {
     let newPriceRange;
@@ -62,7 +104,7 @@ export default function ImoveisPage() {
   };
 
   const applyFiltersWithPriceRange = (priceRanges: string[]) => {
-    let newFilters = { ...filters };
+    let newFilters: PropertyFilters = {};
     
     if (priceRanges.length > 0) {
       const priceRangesData = priceRanges.map(range => {
@@ -93,42 +135,39 @@ export default function ImoveisPage() {
           newFilters.maxPrice = maxPrice;
         }
       }
-    } else {
-      delete newFilters.minPrice;
-      delete newFilters.maxPrice;
     }
     
     setFilters(newFilters);
+    setCurrentPage(1);
   };
 
   const applyFiltersWithBedrooms = (bedrooms: string[]) => {
-    let newFilters = { ...filters };
+    let newFilters: PropertyFilters = {};
     
     if (bedrooms.length > 0) {
       const minBedrooms = Math.min(...bedrooms.map(b => parseInt(b.replace('+', ''))));
       newFilters.bedrooms = minBedrooms;
-    } else {
-      delete newFilters.bedrooms;
     }
     
     setFilters(newFilters);
+    setCurrentPage(1);
   };
 
   const applyFiltersWithBathrooms = (bathrooms: string[]) => {
-    let newFilters = { ...filters };
+    let newFilters: PropertyFilters = {};
     
     if (bathrooms.length > 0) {
       const minBathrooms = Math.min(...bathrooms.map(b => parseInt(b.replace('+', ''))));
       newFilters.bathrooms = minBathrooms;
-    } else {
-      delete newFilters.bathrooms;
     }
     
     setFilters(newFilters);
+    setCurrentPage(1);
   };
 
   const clearAllFilters = () => {
     setFilters({});
+    setCurrentPage(1);
     setPriceRange([]);
     setBedroomsFilter([]);
     setBathroomsFilter([]);
@@ -165,22 +204,16 @@ export default function ImoveisPage() {
                 Filtros e Ordenação
               </h3>
               
-              {/* Controles de Ordenação */}
+              {/* Seletor de tamanho da página */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-slate-700 mb-3">
-                  Ordenar por
-                </label>
-                <select
-                  value={sortBy}
-                  onChange={(e) => handleSortChange(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-smooth"
-                >
-                  <option value="relevance">Relevância</option>
-                  <option value="price-low">Menor preço</option>
-                  <option value="price-high">Maior preço</option>
-                  <option value="newest">Mais recentes</option>
-                  <option value="area">Maior área</option>
-                </select>
+                <PageSizeSelector
+                  currentSize={pageSize}
+                  onSizeChange={(size) => {
+                    setPageSizeState(size);
+                    setCurrentPage(1);
+                  }}
+                  options={[6, 12, 24, 48]}
+                />
               </div>
 
               {/* Controles de Visualização */}
@@ -238,11 +271,9 @@ export default function ImoveisPage() {
                           if (e.target.checked) {
                             const newFilters = { ...filters, type };
                             setFilters(newFilters);
-                            // TODO: Implementar aplicação de filtros
                           } else {
                             const { type: _, ...newFilters } = filters;
                             setFilters(newFilters);
-                            // TODO: Implementar aplicação de filtros
                           }
                         }}
                         className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 focus:ring-2"
@@ -326,11 +357,40 @@ export default function ImoveisPage() {
           {/* Lista de imóveis */}
           <div className="lg:w-3/4">
             <PropertyList 
-              key={JSON.stringify(filters)}
-              filters={filters} 
+              properties={properties}
+              loading={loading}
+              error={error}
               sortBy={sortBy}
               viewMode={viewMode}
             />
+            
+            
+
+            {/* Seção "Você também pode gostar" */}
+            {!loading && !error && properties.length > 0 && (
+              <div className="mt-12">
+                <YouMayAlsoLike />
+              </div>
+            )}
+
+            {/* Paginação */}
+            <div className="mt-8">
+              {!loading && !error && properties.length > 0 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={pagination.totalPages}
+                  onPageChange={setCurrentPage}
+                  onPrevious={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  onNext={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
+                  onFirst={() => setCurrentPage(1)}
+                  onLast={() => setCurrentPage(pagination.totalPages)}
+                  hasNextPage={currentPage < pagination.totalPages}
+                  hasPrevPage={currentPage > 1}
+                  totalItems={pagination.total}
+                  itemsPerPage={pagination.limit}
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -102,6 +102,8 @@ export class PropertyService {
    * Obter propriedade por ID
    */
   async getPropertyById(id: string) {
+    console.log('🔍 PropertyService.getPropertyById chamado com ID:', id);
+    
     try {
       const property = await prisma.property.findUnique({
         where: { id },
@@ -117,14 +119,20 @@ export class PropertyService {
         },
       });
 
+      console.log('🔍 Propriedade encontrada no banco:', property);
+
       if (!property) {
+        console.log('❌ Propriedade não encontrada no banco');
         return {
           success: false,
           error: 'Propriedade não encontrada',
         };
       }
 
-      return {
+      console.log('🔍 property.images antes do parse:', property.images);
+      console.log('🔍 property.features antes do parse:', property.features);
+
+      const result = {
         success: true,
         data: {
           ...property,
@@ -132,7 +140,12 @@ export class PropertyService {
           features: JSON.parse(property.features),
         },
       };
+
+      console.log('🎯 Resultado final sendo retornado:', JSON.stringify(result, null, 2));
+
+      return result;
     } catch (error) {
+      console.error('❌ Erro no PropertyService.getPropertyById:', error);
       return {
         success: false,
         error: 'Erro ao obter propriedade',
@@ -194,18 +207,38 @@ export class PropertyService {
         features: JSON.parse(property.features),
       }));
 
-      return {
+      const totalPages = Math.ceil(total / limit);
+      const hasNextPage = page < totalPages;
+      const hasPrevPage = page > 1;
+
+      const paginationData = {
+        page,
+        limit,
+        total,
+        totalPages,
+        pages: totalPages, // Manter compatibilidade
+        hasNextPage,
+        hasPrevPage,
+        nextPage: hasNextPage ? page + 1 : null,
+        prevPage: hasPrevPage ? page - 1 : null,
+      };
+
+      console.log('🔍 PropertyService - Dados de paginação:', paginationData);
+      console.log('🔍 PropertyService - Total de propriedades:', total);
+      console.log('🔍 PropertyService - Página atual:', page);
+      console.log('🔍 PropertyService - Limite:', limit);
+
+      const result = {
         success: true,
         data: {
           properties: formattedProperties,
-          pagination: {
-            page,
-            limit,
-            total,
-            pages: Math.ceil(total / limit),
-          },
+          pagination: paginationData,
         },
       };
+
+      console.log('🔍 PropertyService - Resultado final:', JSON.stringify(result, null, 2));
+
+      return result;
     } catch (error) {
       return {
         success: false,
@@ -371,6 +404,292 @@ export class PropertyService {
       return {
         success: false,
         error: 'Erro ao obter propriedades do usuário',
+      };
+    }
+  }
+
+  /**
+   * Obter propriedades em destaque para a página inicial
+   */
+  async getFeaturedProperties(limit = 4) {
+    try {
+      const properties = await prisma.property.findMany({
+        where: {
+          isPublished: true,
+          status: 'ACTIVE',
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+            },
+          },
+        },
+        orderBy: [
+          { views: 'desc' },
+          { createdAt: 'desc' }
+        ],
+        take: limit,
+      });
+
+      const formattedProperties = properties.map(property => ({
+        ...property,
+        images: JSON.parse(property.images),
+        features: JSON.parse(property.features),
+      }));
+
+      return {
+        success: true,
+        data: {
+          properties: formattedProperties,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: 'Erro ao obter propriedades em destaque',
+      };
+    }
+  }
+
+  /**
+   * Obter propriedades recentes para a página inicial
+   */
+  async getRecentProperties(limit = 3) {
+    try {
+      const properties = await prisma.property.findMany({
+        where: {
+          isPublished: true,
+          status: 'ACTIVE',
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+      });
+
+      const formattedProperties = properties.map(property => ({
+        ...property,
+        images: JSON.parse(property.images),
+        features: JSON.parse(property.features),
+      }));
+
+      return {
+        success: true,
+        data: {
+          properties: formattedProperties,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: 'Erro ao obter propriedades recentes',
+      };
+    }
+  }
+
+  /**
+   * Obter propriedades com melhor preço para a página inicial
+   */
+  async getAffordableProperties(limit = 3, maxPrice = 300000) {
+    try {
+      const properties = await prisma.property.findMany({
+        where: {
+          isPublished: true,
+          status: 'ACTIVE',
+          price: {
+            lte: maxPrice,
+          },
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+            },
+          },
+        },
+        orderBy: [
+          { price: 'asc' },
+          { views: 'desc' }
+        ],
+        take: limit,
+      });
+
+      const formattedProperties = properties.map(property => ({
+        ...property,
+        images: JSON.parse(property.images),
+        features: JSON.parse(property.features),
+      }));
+
+      return {
+        success: true,
+        data: {
+          properties: formattedProperties,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: 'Erro ao obter propriedades com melhor preço',
+      };
+    }
+  }
+
+  /**
+   * Obter estatísticas gerais do site
+   */
+  async getHomeStats() {
+    try {
+      const [
+        totalProperties,
+        publishedProperties,
+        totalUsers,
+        totalViews,
+        propertiesByType,
+        averagePrice
+      ] = await Promise.all([
+        prisma.property.count(),
+        prisma.property.count({ where: { isPublished: true } }),
+        prisma.user.count(),
+        prisma.property.aggregate({
+          _sum: { views: true },
+        }),
+        prisma.property.groupBy({
+          by: ['type'],
+          _count: { type: true },
+          where: { isPublished: true },
+        }),
+        prisma.property.aggregate({
+          _avg: { price: true },
+          where: { isPublished: true },
+        }),
+      ]);
+
+      return {
+        success: true,
+        data: {
+          totalProperties,
+          publishedProperties,
+          totalUsers,
+          totalViews: totalViews._sum.views || 0,
+          averagePrice: Math.round(averagePrice._avg.price || 0),
+          propertiesByType: propertiesByType.map(item => ({
+            type: item.type,
+            count: item._count.type,
+          })),
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: 'Erro ao obter estatísticas',
+      };
+    }
+  }
+
+  /**
+   * Obter propriedades similares
+   */
+  async getSimilarProperties(filters: any, limit: number, excludeId?: string) {
+    try {
+      const whereClause: any = {
+        isPublished: true,
+        status: 'ACTIVE',
+      };
+
+      // Aplicar filtros se fornecidos
+      if (filters.type) whereClause.type = filters.type;
+      if (filters.city) whereClause.city = filters.city;
+      if (filters.state) whereClause.state = filters.state;
+
+      // Excluir propriedade específica se fornecida
+      if (excludeId) whereClause.id = { not: excludeId };
+
+      // Se não há filtros específicos, buscar propriedades aleatórias em destaque
+      if (Object.keys(filters).length === 0) {
+        const properties = await prisma.property.findMany({
+          where: whereClause,
+          orderBy: [
+            { views: 'desc' },
+            { createdAt: 'desc' }
+          ],
+          take: limit,
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+              },
+            },
+          },
+        });
+
+        const formattedProperties = properties.map(property => ({
+          ...property,
+          images: JSON.parse(property.images),
+          features: JSON.parse(property.features),
+        }));
+
+        return {
+          success: true,
+          data: {
+            properties: formattedProperties,
+          },
+        };
+      }
+
+      // Buscar propriedades similares baseadas nos filtros
+      const properties = await prisma.property.findMany({
+        where: whereClause,
+        orderBy: [
+          { views: 'desc' },
+          { createdAt: 'desc' }
+        ],
+        take: limit,
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+            },
+          },
+        },
+      });
+
+      const formattedProperties = properties.map(property => ({
+        ...property,
+        images: JSON.parse(property.images),
+        features: JSON.parse(property.features),
+      }));
+
+      return {
+        success: true,
+        data: {
+          properties: formattedProperties,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: 'Erro ao obter propriedades similares',
       };
     }
   }

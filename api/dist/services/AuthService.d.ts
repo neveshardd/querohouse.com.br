@@ -1,4 +1,4 @@
-import { LoginRequest, RegisterRequest, ForgotPasswordRequest, ResetPasswordRequest, UpdateProfileRequest, AuthResponse, ApiResponse, User } from '@/types/auth';
+import { LoginRequest, RegisterRequest, ForgotPasswordRequest, ResetPasswordRequest, UpdateProfileRequest, AuthResponse, ApiResponse, User } from '../types/auth';
 export declare class AuthService {
     login(credentials: LoginRequest): Promise<ApiResponse<AuthResponse>>;
     register(userData: RegisterRequest): Promise<ApiResponse<AuthResponse>>;

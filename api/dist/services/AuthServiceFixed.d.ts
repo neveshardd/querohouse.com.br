@@ -1,4 +1,4 @@
-import { LoginRequest, RegisterRequest, AuthResponse, ApiResponse, User } from '@/types/auth';
+import { LoginRequest, RegisterRequest, AuthResponse, ApiResponse, User } from '../types/auth';
 export declare class AuthServiceFixed {
     private jwtSecret;
     login(credentials: LoginRequest): Promise<ApiResponse<AuthResponse>>;

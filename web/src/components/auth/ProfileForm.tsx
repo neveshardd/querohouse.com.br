@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { UpdateProfileSchema, type UpdateProfileRequest } from '@/lib/api';
 import { Button, Input, Label, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/basic';
+import { uploadImage } from '@/lib/api';
 import { Loader2, User, Mail, Phone, Image } from 'lucide-react';
 
 /**
@@ -54,6 +55,17 @@ export function ProfileForm() {
         
         setErrors(fieldErrors);
       }
+    }
+  };
+
+  const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const up = await uploadImage({ file, kind: 'user' });
+      setFormData(prev => ({ ...prev, avatar: up.url }));
+    } catch (err: any) {
+      // opcional: feedback UI
     }
   };
 
@@ -164,6 +176,9 @@ export function ProfileForm() {
               onChange={handleChange('avatar')}
               className={errors.avatar ? 'border-red-500' : ''}
             />
+            <div className="flex items-center gap-3">
+              <input id="avatar-file" type="file" accept="image/*" onChange={handleAvatarFile} />
+            </div>
             {errors.avatar && (
               <p className="text-sm text-red-500">{errors.avatar}</p>
             )}

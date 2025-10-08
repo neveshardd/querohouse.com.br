@@ -27,7 +27,6 @@ export class PaymentService {
         id: paymentIntent.id,
       };
     } catch (error) {
-      console.error('Erro ao criar PaymentIntent:', error);
       throw new Error('Falha ao processar pagamento');
     }
   }
@@ -52,7 +51,6 @@ export class PaymentService {
         status: paymentIntent.status,
       };
     } catch (error) {
-      console.error('Erro ao confirmar pagamento:', error);
       throw new Error('Falha ao confirmar pagamento');
     }
   }

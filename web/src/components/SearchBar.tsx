@@ -1,10 +1,26 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import { Search, Home, DollarSign, Building2, ChevronDown, Check, X, Bath, Map } from 'lucide-react';
+import { 
+  Search, 
+  Home, 
+  Building2, 
+  TreePine, 
+  Store, 
+  MapPin, 
+  DollarSign, 
+  ChevronDown, 
+  Check, 
+  X, 
+  Bath, 
+  Bed,
+  Map,
+  Building
+} from 'lucide-react';
 import { Listbox, Transition } from '@headlessui/react';
 import gsap from 'gsap';
 import { useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 
 // Types
 interface SearchFilters {
@@ -18,6 +34,7 @@ interface SearchFilters {
 
 interface SearchBarProps {
   onFiltersChange?: (filters: any) => void;
+  redirectOnSearch?: boolean; // Nova prop para controlar redirecionamento
 }
 
 interface PropertyType {
@@ -33,12 +50,12 @@ interface PriceRange {
 
 // Constants
 const PROPERTY_TYPES: PropertyType[] = [
-  { id: 'todos', name: 'Todos os tipos', icon: Home },
+  { id: 'todos', name: 'Todos os tipos', icon: Building },
   { id: 'casa', name: 'Casa', icon: Home },
-  { id: 'apartamento', name: 'Apartamento', icon: Home },
-  { id: 'terreno', name: 'Terreno', icon: Home },
-  { id: 'comercial', name: 'Comercial', icon: Home },
-  { id: 'rural', name: 'Rural', icon: Home },
+  { id: 'apartamento', name: 'Apartamento', icon: Building2 },
+  { id: 'terreno', name: 'Terreno', icon: MapPin },
+  { id: 'comercial', name: 'Comercial', icon: Store },
+  { id: 'rural', name: 'Rural', icon: TreePine },
 ];
 
 const PRICE_RANGES: PriceRange[] = [
@@ -51,16 +68,16 @@ const PRICE_RANGES: PriceRange[] = [
 ];
 
 const POPULAR_LOCATIONS = [
-  'São Paulo, SP',
-  'Rio de Janeiro, RJ',
-  'Belo Horizonte, MG',
-  'Salvador, BA',
   'Brasília, DF',
-  'Fortaleza, CE',
-  'Manaus, AM',
-  'Curitiba, PR',
-  'Recife, PE',
-  'Porto Alegre, RS'
+  'Asa Norte, Brasília - DF',
+  'Asa Sul, Brasília - DF',
+  'Lago Sul, Brasília - DF',
+  'Lago Norte, Brasília - DF',
+  'Taguatinga, Brasília - DF',
+  'Ceilândia, Brasília - DF',
+  'Samambaia, Brasília - DF',
+  'Gama, Brasília - DF',
+  'Guará, Brasília - DF'
 ];
 
 const DEFAULT_FILTERS: SearchFilters = {
@@ -115,11 +132,12 @@ const convertFiltersToAPI = (filters: SearchFilters) => {
 };
 
 // Custom hooks
-const useSearchFilters = (onFiltersChange?: (filters: any) => void) => {
+const useSearchFilters = (onFiltersChange?: (filters: any) => void, redirectOnSearch?: boolean) => {
   const [filters, setFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
   const [filteredLocations, setFilteredLocations] = useState<string[]>([]);
+  const router = useRouter();
 
   const handleFilterChange = useCallback((key: keyof SearchFilters, value: string) => {
     const newFilters = { ...filters, [key]: value };
@@ -166,6 +184,30 @@ const useSearchFilters = (onFiltersChange?: (filters: any) => void) => {
     ), [filters]
   );
 
+  const handleSearch = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    const apiFilters = convertFiltersToAPI(filters);
+    
+    if (redirectOnSearch) {
+      // Construir URL com parâmetros de busca
+      const searchParams = new URLSearchParams();
+      
+      if (apiFilters.city) searchParams.set('city', apiFilters.city);
+      if (apiFilters.state) searchParams.set('state', apiFilters.state);
+      if (apiFilters.type) searchParams.set('type', apiFilters.type);
+      if (apiFilters.minPrice) searchParams.set('minPrice', apiFilters.minPrice.toString());
+      if (apiFilters.maxPrice) searchParams.set('maxPrice', apiFilters.maxPrice.toString());
+      if (apiFilters.bedrooms) searchParams.set('bedrooms', apiFilters.bedrooms.toString());
+      if (apiFilters.bathrooms) searchParams.set('bathrooms', apiFilters.bathrooms.toString());
+      
+      const queryString = searchParams.toString();
+      const url = queryString ? `/imoveis?${queryString}` : '/imoveis';
+      router.push(url);
+    } else if (onFiltersChange) {
+      onFiltersChange(apiFilters);
+    }
+  }, [filters, redirectOnSearch, onFiltersChange, router]);
+
   return {
     filters,
     showAdvancedFilters,
@@ -177,7 +219,8 @@ const useSearchFilters = (onFiltersChange?: (filters: any) => void) => {
     handleLocationChange,
     selectLocation,
     clearFilters,
-    hasActiveFilters
+    hasActiveFilters,
+    handleSearch
   };
 };
 
@@ -197,13 +240,13 @@ const LocationInput = ({
 }) => (
   <div className="lg:col-span-2">
     <label className="text-sm font-medium text-slate-700 mb-2 flex items-center">
-      <Building2 className="w-4 h-4 mr-2" />
+      <MapPin className="w-4 h-4 mr-2" />
       Onde você quer morar?
     </label>
     <div className="relative">
       <input
         type="text"
-        placeholder="Digite cidade, bairro ou CEP"
+        placeholder="Digite região de Brasília ou CEP"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => {
@@ -216,7 +259,7 @@ const LocationInput = ({
         }}
         className="input pl-12"
       />
-      <Map className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+      <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
       
       {showSuggestions && suggestions.length > 0 && (
         <div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -226,7 +269,7 @@ const LocationInput = ({
               onClick={() => onSelect(location)}
               className="w-full px-4 py-3 text-left hover:bg-slate-50 border-b border-slate-100 last:border-b-0 flex items-center"
             >
-              <Building2 className="w-4 h-4 mr-3 text-slate-400" />
+              <MapPin className="w-4 h-4 mr-3 text-slate-400" />
               <span className="text-slate-700">{location}</span>
             </button>
           ))}
@@ -443,7 +486,7 @@ const AdvancedFilters = ({
           {/* Bedrooms */}
           <div>
             <label className="text-sm font-medium text-slate-700 mb-2 flex items-center">
-              <Home className="w-4 h-4 mr-2" />
+              <Bed className="w-4 h-4 mr-2" />
               Quartos
             </label>
             <input
@@ -515,7 +558,7 @@ const AdvancedFilters = ({
   );
 };
 
-export default function SearchBar({ onFiltersChange }: SearchBarProps) {
+export default function SearchBar({ onFiltersChange, redirectOnSearch = false }: SearchBarProps) {
   const {
     filters,
     showAdvancedFilters,
@@ -527,17 +570,10 @@ export default function SearchBar({ onFiltersChange }: SearchBarProps) {
     handleLocationChange,
     selectLocation,
     clearFilters,
-    hasActiveFilters
-  } = useSearchFilters(onFiltersChange);
+    hasActiveFilters,
+    handleSearch
+  } = useSearchFilters(onFiltersChange, redirectOnSearch);
 
-  const handleSearch = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    const apiFilters = convertFiltersToAPI(filters);
-    if (onFiltersChange) {
-      onFiltersChange(apiFilters);
-    }
-    console.log('Buscando com filtros:', apiFilters);
-  }, [filters, onFiltersChange]);
 
   const selectedPropertyType = useMemo(() => 
     PROPERTY_TYPES.find(type => type.id === filters.propertyType) || PROPERTY_TYPES[0], 

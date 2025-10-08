@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+'use client';
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { propertyService } from '@/lib/api';
 import { PropertyCardData, PropertyFilters } from '@/types/property';
 
@@ -12,47 +14,31 @@ interface UsePropertiesReturn {
     total: number;
     totalPages: number;
   };
-  loadProperties: (page?: number, filters?: PropertyFilters) => Promise<void>;
+  refetch: () => void;
   applyFilters: (filters: PropertyFilters) => void;
   clearFilters: () => void;
 }
 
 export function useProperties(initialFilters?: PropertyFilters): UsePropertiesReturn {
-  const [properties, setProperties] = useState<PropertyCardData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<PropertyFilters>(initialFilters || {});
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 12,
-    total: 0,
-    totalPages: 0
-  });
-
-  // Atualizar filtros quando initialFilters mudar
-  useEffect(() => {
-    if (initialFilters) {
-      setFilters(initialFilters);
-    }
-  }, [JSON.stringify(initialFilters)]);
-
-  const loadProperties = async (page: number = 1, newFilters?: PropertyFilters) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const filtersToUse = newFilters || filters;
-      
+  const queryClient = useQueryClient();
+  
+  const {
+    data,
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['properties', initialFilters],
+    queryFn: async () => {
       const response = await propertyService.getProperties(
-        filtersToUse, 
-        page, 
-        pagination.limit
+        initialFilters || {}, 
+        1, 
+        12
       );
       
       if (response.success && response.data) {
-        // Estrutura: ApiResponse<{ data: Property[]; pagination: {...} }>
         const paginated = response.data;
-        const propertiesData = paginated.data || [];
+        const propertiesData = paginated.properties || [];
         const paginationData = paginated.pagination || { page: 1, limit: 12, total: 0, totalPages: 0 };
         
         const propertyCards = propertiesData.map((property: any) => ({
@@ -64,52 +50,38 @@ export function useProperties(initialFilters?: PropertyFilters): UsePropertiesRe
           bathrooms: property.bathrooms,
           area: property.area,
           type: property.type,
-          image: property.images?.[0] || '/placeholder-property.jpg',
+          image: property.images?.[0] || '/placeholder-property.svg',
           featured: property.isPublished,
           operation: 'venda' as const
         }));
         
-        setProperties(propertyCards);
-        setPagination(paginationData);
+        return {
+          properties: propertyCards,
+          pagination: paginationData
+        };
       } else {
-        setError('Erro ao carregar propriedades');
+        throw new Error('Erro ao carregar propriedades');
       }
-    } catch (err) {
-      console.error('Erro ao carregar propriedades:', err);
-      setError('Erro ao carregar propriedades');
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutos (menos tempo para filtros)
+    gcTime: 5 * 60 * 1000, // 5 minutos
+  });
 
-  const applyFilters = (newFilters: PropertyFilters) => {
-    setFilters(newFilters);
-    loadProperties(1, newFilters);
+  const applyFilters = (filters: PropertyFilters) => {
+    // Invalidar e refazer a query com novos filtros
+    queryClient.invalidateQueries({ queryKey: ['properties'] });
   };
 
   const clearFilters = () => {
-    setFilters({});
-    loadProperties(1, {});
+    queryClient.invalidateQueries({ queryKey: ['properties'] });
   };
 
-  // Carregar propriedades na montagem do componente e quando os filtros mudarem
-  useEffect(() => {
-    loadProperties(1, filters);
-  }, [JSON.stringify(filters)]);
-
-  // Carregar propriedades quando initialFilters mudar
-  useEffect(() => {
-    if (initialFilters && Object.keys(initialFilters).length > 0) {
-      loadProperties(1, initialFilters);
-    }
-  }, [JSON.stringify(initialFilters)]);
-
   return {
-    properties,
-    loading,
-    error,
-    pagination,
-    loadProperties,
+    properties: data?.properties || [],
+    loading: isLoading,
+    error: error?.message || null,
+    pagination: data?.pagination || { page: 1, limit: 12, total: 0, totalPages: 0 },
+    refetch,
     applyFilters,
     clearFilters
   };

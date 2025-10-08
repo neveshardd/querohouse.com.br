@@ -29,7 +29,6 @@ class PaymentService {
             };
         }
         catch (error) {
-            console.error('Erro ao criar PaymentIntent:', error);
             throw new Error('Falha ao processar pagamento');
         }
     }
@@ -51,7 +50,6 @@ class PaymentService {
             };
         }
         catch (error) {
-            console.error('Erro ao confirmar pagamento:', error);
             throw new Error('Falha ao confirmar pagamento');
         }
     }

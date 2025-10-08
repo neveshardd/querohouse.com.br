@@ -83,7 +83,6 @@ export class AuthServiceFixed {
         },
       };
     } catch (error) {
-      console.error('Erro no login:', error);
       return {
         success: false,
         error: 'Credenciais inválidas',
@@ -160,7 +159,6 @@ export class AuthServiceFixed {
         },
       };
     } catch (error) {
-      console.error('Erro no registro:', error);
       return {
         success: false,
         error: 'Erro ao criar conta',

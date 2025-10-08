@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.paymentRoutes = paymentRoutes;
-const PaymentController_1 = require("@/controllers/PaymentController");
+const PaymentController_1 = require("../controllers/PaymentController");
 async function paymentRoutes(fastify) {
     const paymentController = new PaymentController_1.PaymentController();
     const createPaymentIntentSchema = {

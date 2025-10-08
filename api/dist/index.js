@@ -9,12 +9,13 @@ const cors_1 = __importDefault(require("@fastify/cors"));
 const helmet_1 = __importDefault(require("@fastify/helmet"));
 const rate_limit_1 = __importDefault(require("@fastify/rate-limit"));
 const swagger_1 = __importDefault(require("@fastify/swagger"));
-const auth_1 = require("@/routes/auth");
-const properties_1 = require("@/routes/properties");
-const payments_1 = require("@/routes/payments");
-const auth_2 = require("@/middleware/auth");
+const auth_1 = require("./routes/auth");
+const properties_1 = require("./routes/properties");
+const payments_1 = require("./routes/payments");
+const uploads_1 = require("./routes/uploads");
+const auth_2 = require("./middleware/auth");
 const fastify_api_reference_1 = __importDefault(require("@scalar/fastify-api-reference"));
-const logger_1 = require("@/config/logger");
+const logger_1 = require("./config/logger");
 async function buildServer() {
     const fastify = (0, fastify_1.default)({
         logger: {
@@ -31,7 +32,7 @@ async function buildServer() {
         ],
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'x-upload-kind'],
     });
     await fastify.register(helmet_1.default, {
         contentSecurityPolicy: false,
@@ -52,12 +53,6 @@ async function buildServer() {
                     email: 'contato@querohouse.com.br',
                 },
             },
-            servers: [
-                {
-                    url: process.env.API_URL || 'http://localhost:3001',
-                    description: 'Servidor de desenvolvimento',
-                },
-            ],
             components: {
                 securitySchemes: {
                     bearerAuth: {
@@ -101,6 +96,7 @@ async function buildServer() {
     await fastify.register(auth_1.authRoutes, { prefix: '/api/auth' });
     await fastify.register(properties_1.propertyRoutes, { prefix: '/api' });
     await fastify.register(payments_1.paymentRoutes, { prefix: '/api/payments' });
+    await fastify.register(uploads_1.uploadRoutes, { prefix: '/api' });
     fastify.get('/health', async (request, reply) => {
         logger_1.logger.info('Health check solicitado');
         return {
@@ -130,9 +126,8 @@ async function start() {
     try {
         const server = await buildServer();
         const port = parseInt(process.env.PORT || '3001');
-        await server.listen({ port,
-            host: process.env.NODE_ENV === 'development' ? '0.0.0.0' : 'localhost'
-        });
+        const host = process.env.HOST || '0.0.0.0';
+        await server.listen({ port, host });
     }
     catch (error) {
         logger_1.logger.error(error, 'Inicialização do servidor');

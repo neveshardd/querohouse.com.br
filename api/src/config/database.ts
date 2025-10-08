@@ -12,7 +12,7 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: false, // Desabilitado temporariamente para testes
+    requireEmailVerification: false,
     minPasswordLength: 6,
   },
   socialProviders: {

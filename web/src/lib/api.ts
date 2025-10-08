@@ -12,7 +12,7 @@ import {
 
 // Configuração base do Axios
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+  baseURL: 'http://localhost:3001', // URL fixa para debug
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -171,7 +171,6 @@ export const authService = {
         password: credentials.password,
       });
       
-      console.log('Resposta do login:', response.data);
       
       // Backend responde { success, data: { user, token, refreshToken } }
       const apiData = response.data;
@@ -186,7 +185,6 @@ export const authService = {
       };
     } catch (error: any) {
       if (!(error as any).silent) {
-        console.error('Erro no login:', error);
       }
       return {
         success: false,
@@ -203,7 +201,6 @@ export const authService = {
         name: userData.name,
       });
       
-      console.log('Resposta do registro:', response.data);
       
       // Backend responde { success, data: { user, token, refreshToken } }
       const apiData = response.data;
@@ -218,7 +215,6 @@ export const authService = {
       };
     } catch (error: any) {
       if (!(error as any).silent) {
-        console.error('Erro no registro:', error);
       }
       return {
         success: false,
@@ -236,7 +232,6 @@ export const authService = {
       };
     } catch (error: any) {
       if (!(error as any).silent) {
-        console.error('Erro no logout:', error);
       }
       return {
         success: false,
@@ -249,7 +244,6 @@ export const authService = {
     try {
       const response = await api.get('/api/auth/session');
       
-      console.log('Resposta da sessão:', response.data);
       
       // Backend responde { success, data: user }
       if (response.data?.success && response.data?.data) {
@@ -262,7 +256,6 @@ export const authService = {
       };
     } catch (error: any) {
       if (!(error as any).silent) {
-        console.error('Erro ao obter perfil:', error);
       }
       return {
         success: false,
@@ -275,7 +268,6 @@ export const authService = {
     try {
       const response = await api.put('/api/auth/update-user', userData);
       
-      console.log('Resposta da atualização:', response.data);
       
       // Backend responde { success, data: user }
       if (response.data?.success && response.data?.data) {
@@ -288,7 +280,6 @@ export const authService = {
       };
     } catch (error: any) {
       if (!(error as any).silent) {
-        console.error('Erro ao atualizar perfil:', error);
       }
       return {
         success: false,
@@ -304,7 +295,6 @@ export const authService = {
         redirectTo: `${window.location.origin}/reset-password`
       });
       
-      console.log('Resposta do forgot password:', response.data);
       
       return {
         success: true,
@@ -312,7 +302,6 @@ export const authService = {
       };
     } catch (error: any) {
       if (!(error as any).silent) {
-        console.error('Erro ao enviar email de recuperação:', error);
       }
       return {
         success: false,
@@ -328,7 +317,6 @@ export const authService = {
         password: data.password
       });
       
-      console.log('Resposta do reset password:', response.data);
       
       return {
         success: true,
@@ -336,7 +324,6 @@ export const authService = {
       };
     } catch (error: any) {
       if (!(error as any).silent) {
-        console.error('Erro ao alterar senha:', error);
       }
       return {
         success: false,
@@ -354,6 +341,8 @@ export const propertyService = {
     page: number = 1, 
     limit: number = 10
   ): Promise<PropertiesResponse> {
+    console.log('🌐 propertyService.getProperties chamado com:', { filters, page, limit });
+    
     const params = new URLSearchParams();
     
     if (filters) {
@@ -397,15 +386,76 @@ export const propertyService = {
     params.append('limit', limit.toString());
     
     const url = `/api/properties?${params.toString()}`;
+    console.log('🔗 URL da requisição:', url);
+    console.log('🌍 Base URL:', api.defaults.baseURL);
     
-    const response = await api.get(url);
-    return response.data;
+    try {
+      const response = await api.get(url);
+      console.log('✅ Resposta recebida:', response.status, response.statusText);
+      console.log('📦 Dados da resposta:', response.data);
+      
+      const apiData = response.data;
+
+      // Normalizar a resposta do backend (que usa { data: { properties, pagination: { pages } } })
+      if (apiData?.success && apiData?.data) {
+        const properties = apiData.data.properties || apiData.data.data || [];
+        const pagination = apiData.data.pagination || {};
+        console.log('📊 Propriedades encontradas:', properties.length);
+        console.log('📄 Dados de paginação:', pagination);
+        
+        const normalized = {
+          success: true,
+          data: {
+            properties: properties,
+            pagination: {
+              page: pagination.page ?? page,
+              limit: pagination.limit ?? limit,
+              total: pagination.total ?? 0,
+              totalPages: pagination.totalPages ?? pagination.pages ?? 0,
+            },
+          },
+        } as PropertiesResponse;
+        
+        console.log('🎯 Resposta normalizada:', normalized);
+        return normalized;
+      }
+
+      console.log('⚠️ Resposta não normalizada:', apiData);
+      return apiData as PropertiesResponse;
+    } catch (error) {
+      console.error('❌ Erro na requisição:', error);
+      throw error;
+    }
   },
 
   // Obter propriedade por ID
   async getPropertyById(id: string): Promise<PropertyResponse> {
-    const response = await api.get(`/api/properties/${id}`);
-    return response.data;
+    console.log('🔍 propertyService.getPropertyById chamado com ID:', id);
+    
+    try {
+      const response = await api.get(`/api/properties/${id}`);
+      console.log('✅ Resposta recebida:', response.status, response.statusText);
+      console.log('📦 Dados da resposta:', response.data);
+      
+      const apiData = response.data;
+      
+      if (apiData?.success && apiData?.data) {
+        console.log('🎯 Propriedade encontrada:', apiData.data);
+        return {
+          success: true,
+          data: apiData.data
+        };
+      } else {
+        console.error('❌ Propriedade não encontrada ou erro na API:', apiData);
+        return {
+          success: false,
+          error: 'Propriedade não encontrada'
+        };
+      }
+    } catch (error) {
+      console.error('❌ Erro na requisição:', error);
+      throw error;
+    }
   },
 
   // Criar nova propriedade
@@ -431,6 +481,72 @@ export const propertyService = {
     const response = await api.get(`/api/properties/user/my-properties?page=${page}&limit=${limit}`);
     return response.data;
   },
+
+  // Serviços para página inicial
+  async getFeaturedProperties(limit: number = 4): Promise<ApiResponse<{ properties: Property[] }>> {
+    const response = await api.get(`/api/properties/featured?limit=${limit}`);
+    return response.data;
+  },
+
+  async getRecentProperties(limit: number = 3): Promise<ApiResponse<{ properties: Property[] }>> {
+    const response = await api.get(`/api/properties/recent?limit=${limit}`);
+    return response.data;
+  },
+
+  async getAffordableProperties(limit: number = 3, maxPrice: number = 300000): Promise<ApiResponse<{ properties: Property[] }>> {
+    const response = await api.get(`/api/properties/affordable?limit=${limit}&maxPrice=${maxPrice}`);
+    return response.data;
+  },
+
+  async getHomeStats(): Promise<ApiResponse<{
+    totalProperties: number;
+    publishedProperties: number;
+    totalUsers: number;
+    totalViews: number;
+    averagePrice: number;
+    propertiesByType: Array<{ type: string; count: number }>;
+  }>> {
+    const response = await api.get('/api/home/stats');
+    return response.data;
+  },
+
+  // Obter propriedades similares
+  async getSimilarProperties(
+    filters?: { type?: string; city?: string; state?: string },
+    limit: number = 6,
+    excludeId?: string
+  ): Promise<ApiResponse<{ properties: Property[] }>> {
+    const params = new URLSearchParams();
+    
+    if (filters?.type) params.append('type', filters.type);
+    if (filters?.city) params.append('city', filters.city);
+    if (filters?.state) params.append('state', filters.state);
+    if (excludeId) params.append('excludeId', excludeId);
+    
+    params.append('limit', limit.toString());
+    
+    const url = `/api/properties/similar?${params.toString()}`;
+    const response = await api.get(url);
+    return response.data;
+  },
 };
 
 export default api;
+
+// Upload de imagem (Cloudflare R2 via API)
+export async function uploadImage({ file, kind = 'misc' as 'property' | 'user' | 'misc' }): Promise<{ url: string; key: string; contentType: string; size: number; }> {
+  const form = new FormData();
+  form.append('file', file);
+
+  const res = await api.post('/api/uploads/image', form, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      'x-upload-kind': kind,
+    },
+  });
+
+  if (!res.data?.success) {
+    throw new Error(res.data?.error || 'Falha no upload');
+  }
+  return res.data.data;
+}

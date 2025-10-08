@@ -24,7 +24,7 @@ export default function ContatoPage() {
     // Simular envio
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    alert('Mensagem enviada com sucesso! Entraremos em contato em breve.');
+    // Mensagem enviada com sucesso
     setIsSubmitting(false);
     setFormData({
       name: '',
